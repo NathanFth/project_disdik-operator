@@ -17,17 +17,17 @@ import {
 import { BarChart3, PieChart as PieChartIcon } from "lucide-react";
 
 const studentsByDistrict = [
-  { district: "Central", students: 3245 },
-  { district: "North", students: 2876 },
-  { district: "South", students: 3156 },
-  { district: "East", students: 2890 },
-  { district: "West", students: 2680 },
+  { kecamatan: "Pusat", siswa: 3245 },
+  { kecamatan: "Utara", siswa: 2876 },
+  { kecamatan: "Selatan", siswa: 3156 },
+  { kecamatan: "Timur", siswa: 2890 },
+  { kecamatan: "Barat", siswa: 2680 },
 ];
 
 const facilityConditions = [
-  { name: "Good Condition", value: 68, color: "#22c55e" },
-  { name: "Moderate Damage", value: 23, color: "#f59e0b" },
-  { name: "Heavy Damage", value: 9, color: "#ef4444" },
+  { name: "Kondisi Baik", value: 68, color: "#22c55e" },
+  { name: "Kerusakan Sedang", value: 23, color: "#f59e0b" },
+  { name: "Kerusakan Berat", value: 9, color: "#ef4444" },
 ];
 
 export default function DataVisualization() {
@@ -38,21 +38,21 @@ export default function DataVisualization() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
-            Students per District
+            Siswa per Kecamatan
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64">
+          <div className="h-68">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={studentsByDistrict}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis
-                  dataKey="district"
+                  dataKey="kecamatan"
                   tick={{ fontSize: 12 }}
                   stroke="#64748b"
                 />
                 <YAxis tick={{ fontSize: 12 }} stroke="#64748b" />
-                <Bar dataKey="students" fill="#1E3A8A" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="siswa" fill="#1E3A8A" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -64,17 +64,17 @@ export default function DataVisualization() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <PieChartIcon className="h-5 w-5 text-primary" />
-            Facility Conditions
+            Kondisi Fasilitas
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64">
+          <div className="h-68">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={facilityConditions}
                   cx="50%"
-                  cy="50%"
+                  cy="45%"
                   outerRadius={80}
                   dataKey="value"
                   label={({ value }) => `${value}%`}
@@ -85,7 +85,7 @@ export default function DataVisualization() {
                 </Pie>
                 <Legend
                   verticalAlign="bottom"
-                  height={36}
+                  height={30}
                   wrapperStyle={{ fontSize: "12px" }}
                 />
               </PieChart>

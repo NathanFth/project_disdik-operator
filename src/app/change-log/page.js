@@ -36,11 +36,11 @@ export default function App() {
                 <div>
                   <h1 className="text-3xl text-foreground mb-2 flex items-center gap-3">
                     <History className="h-8 w-8 text-primary" />
-                    Change Log
+                    Log Perubahan
                   </h1>
                   <p className="text-muted-foreground">
-                    Track all system changes and data modifications with details
-                    and timestamps
+                    Mencatat seluruh perubahan sistem dan modifikasi data secara
+                    rinci beserta waktu kejadiannya.
                   </p>
                 </div>
               </div>

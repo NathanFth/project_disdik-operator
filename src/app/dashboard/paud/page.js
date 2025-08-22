@@ -1,0 +1,69 @@
+// src/app/dashboard/paud/page.js
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Sidebar from "../../components/Sidebar";
+import TopNavbar from "../../components/TopNavbar";
+import SchoolsTable from "../../components/SchoolsTable";
+import { Baby, Loader2 } from "lucide-react";
+import { auth } from "../../../lib/auth";
+
+export default function PaudPage() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const userData = auth.getUser();
+    if (!userData) {
+      router.push("/login");
+      return;
+    }
+    // Check access permission
+    if (!auth.hasAccess("/dashboard/paud")) {
+      router.push("/dashboard");
+      return;
+    }
+    setUser(userData);
+    setLoading(false);
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="flex">
+        <Sidebar />
+        <div className="flex-1 md:ml-64">
+          <TopNavbar />
+          <main className="p-6 space-y-8">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-3xl text-foreground mb-2 flex items-center gap-3">
+                <Baby className="h-8 w-8 text-primary" />
+                Data PAUD
+              </h1>
+              <p className="text-muted-foreground">
+                Kelola data Pendidikan Anak Usia Dini (PAUD)
+              </p>
+            </div>
+
+            {/* Schools Table */}
+            <SchoolsTable operatorType="PAUD" />
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+}

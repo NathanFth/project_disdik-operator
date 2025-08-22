@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Textarea } from "./ui/textarea";
-import { School, Save, X, Loader2, AlertCircle } from "lucide-react";
+import { Save, X, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AddSchoolForm() {
@@ -36,23 +36,24 @@ export default function AddSchoolForm() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.district) newErrors.district = "District is required";
-    if (!formData.npsn) newErrors.npsn = "NPSN is required";
-    if (!formData.schoolName) newErrors.schoolName = "School name is required";
-    if (!formData.schoolType) newErrors.schoolType = "School type is required";
-    if (!formData.address) newErrors.address = "Address is required";
-    if (!formData.status) newErrors.status = "Status is required";
+    if (!formData.district) newErrors.district = "Kecamatan wajib diisi";
+    if (!formData.npsn) newErrors.npsn = "NPSN wajib diisi";
+    if (!formData.schoolName) newErrors.schoolName = "Nama sekolah wajib diisi";
+    if (!formData.schoolType)
+      newErrors.schoolType = "Jenis sekolah wajib diisi";
+    if (!formData.address) newErrors.address = "Alamat wajib diisi";
+    if (!formData.status) newErrors.status = "Status wajib diisi";
 
     if (formData.npsn && !/^\d{8}$/.test(formData.npsn)) {
-      newErrors.npsn = "NPSN must be exactly 8 digits";
+      newErrors.npsn = "NPSN harus 8 digit angka";
     }
 
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = "Masukkan alamat email yang valid";
     }
 
     if (formData.phone && !/^[\d\s\-\+\(\)]{10,15}$/.test(formData.phone)) {
-      newErrors.phone = "Please enter a valid phone number";
+      newErrors.phone = "Masukkan nomor telepon yang valid (10-15 digit)";
     }
 
     setErrors(newErrors);
@@ -72,7 +73,7 @@ export default function AddSchoolForm() {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error("Please fix the errors in the form");
+      toast.error("Periksa kembali data yang diisi");
       return;
     }
 
@@ -81,7 +82,7 @@ export default function AddSchoolForm() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      toast.success("School added successfully!");
+      toast.success("Sekolah berhasil ditambahkan!");
       setHasUnsavedChanges(false);
 
       setFormData({
@@ -96,7 +97,7 @@ export default function AddSchoolForm() {
         notes: "",
       });
     } catch (error) {
-      toast.error("Failed to add school. Please try again.");
+      toast.error("Gagal menambahkan sekolah. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -104,11 +105,7 @@ export default function AddSchoolForm() {
 
   const handleCancel = () => {
     if (hasUnsavedChanges) {
-      if (
-        window.confirm(
-          "You have unsaved changes. Are you sure you want to cancel?"
-        )
-      ) {
+      if (window.confirm("Perubahan belum disimpan. Yakin batal?")) {
         setFormData({
           district: "",
           npsn: "",
@@ -128,34 +125,18 @@ export default function AddSchoolForm() {
 
   return (
     <Card className="rounded-xl shadow-lg border-border/50 max-w-9xl mx-auto">
-      {/* <CardHeader className="border-b border-border/50">
-        <CardTitle className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <School className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-2xl text-card-foreground">
-              Tambahkan Sekolah Baru
-            </h2>
-            <p className="text-muted-foreground mt-1">
-              Isi data sekolah untuk mendaftarkan sekolah baru{" "}
-            </p>
-          </div>
-        </CardTitle>
-      </CardHeader> */}
-
       <CardContent className="p-8">
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information */}
+          {/* Informasi Dasar */}
           <div className="space-y-6">
             <h3 className="text-lg text-card-foreground border-l-4 border-primary pl-4">
-              Basic Information
+              Informasi Dasar
             </h3>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="district" className="text-card-foreground">
-                  District <span className="text-destructive">*</span>
+                  Kecamatan <span className="text-destructive">*</span>
                 </Label>
                 <Select
                   value={formData.district}
@@ -170,14 +151,14 @@ export default function AddSchoolForm() {
                         : "border-border/50"
                     }`}
                   >
-                    <SelectValue placeholder="Select district" />
+                    <SelectValue placeholder="Pilih kecamatan" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Central">Central</SelectItem>
-                    <SelectItem value="North">North</SelectItem>
-                    <SelectItem value="South">South</SelectItem>
-                    <SelectItem value="East">East</SelectItem>
-                    <SelectItem value="West">West</SelectItem>
+                    <SelectItem value="Pusat">Pusat</SelectItem>
+                    <SelectItem value="Utara">Utara</SelectItem>
+                    <SelectItem value="Selatan">Selatan</SelectItem>
+                    <SelectItem value="Timur">Timur</SelectItem>
+                    <SelectItem value="Barat">Barat</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.district && (
@@ -204,7 +185,7 @@ export default function AddSchoolForm() {
                   className={`rounded-xl h-12 ${
                     errors.npsn ? "border-destructive" : "border-border/50"
                   }`}
-                  placeholder="Enter 8-digit NPSN"
+                  placeholder="Masukkan 8 digit NPSN"
                   maxLength={8}
                 />
                 {errors.npsn && (
@@ -218,7 +199,7 @@ export default function AddSchoolForm() {
 
             <div className="space-y-2">
               <Label htmlFor="schoolName" className="text-card-foreground">
-                School Name <span className="text-destructive">*</span>
+                Nama Sekolah <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="schoolName"
@@ -229,7 +210,7 @@ export default function AddSchoolForm() {
                 className={`rounded-xl h-12 ${
                   errors.schoolName ? "border-destructive" : "border-border/50"
                 }`}
-                placeholder="Enter full school name"
+                placeholder="Masukkan nama lengkap sekolah"
               />
               {errors.schoolName && (
                 <p className="text-sm text-destructive flex items-center gap-1">
@@ -242,7 +223,7 @@ export default function AddSchoolForm() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="schoolType" className="text-card-foreground">
-                  School Type <span className="text-destructive">*</span>
+                  Jenis Sekolah <span className="text-destructive">*</span>
                 </Label>
                 <Select
                   value={formData.schoolType}
@@ -257,21 +238,13 @@ export default function AddSchoolForm() {
                         : "border-border/50"
                     }`}
                   >
-                    <SelectValue placeholder="Select school type" />
+                    <SelectValue placeholder="Pilih jenis sekolah" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PAUD">PAUD (Early Childhood)</SelectItem>
-                    <SelectItem value="TK">TK (Kindergarten)</SelectItem>
-                    <SelectItem value="SD">SD (Elementary School)</SelectItem>
-                    <SelectItem value="SMP">
-                      SMP (Junior High School)
-                    </SelectItem>
-                    <SelectItem value="SMA">
-                      SMA (Senior High School)
-                    </SelectItem>
-                    <SelectItem value="SMK">
-                      SMK (Vocational High School)
-                    </SelectItem>
+                    <SelectItem value="PKBM">PKBM</SelectItem>
+                    <SelectItem value="PAUD">PAUD</SelectItem>
+                    <SelectItem value="SD">SD</SelectItem>
+                    <SelectItem value="SMP">SMP</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.schoolType && (
@@ -295,14 +268,16 @@ export default function AddSchoolForm() {
                       errors.status ? "border-destructive" : "border-border/50"
                     }`}
                   >
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder="Pilih status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Inactive">Inactive</SelectItem>
-                    <SelectItem value="Under Review">Under Review</SelectItem>
-                    <SelectItem value="Incomplete Data">
-                      Incomplete Data
+                    <SelectItem value="Aktif">Aktif</SelectItem>
+                    <SelectItem value="Nonaktif">Nonaktif</SelectItem>
+                    <SelectItem value="Dalam Tinjauan">
+                      Dalam Tinjauan
+                    </SelectItem>
+                    <SelectItem value="Data Belum Lengkap">
+                      Data Belum Lengkap
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -317,7 +292,7 @@ export default function AddSchoolForm() {
 
             <div className="space-y-2">
               <Label htmlFor="address" className="text-card-foreground">
-                Address <span className="text-destructive">*</span>
+                Alamat <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id="address"
@@ -326,7 +301,7 @@ export default function AddSchoolForm() {
                 className={`rounded-xl ${
                   errors.address ? "border-destructive" : "border-border/50"
                 }`}
-                placeholder="Enter complete school address"
+                placeholder="Masukkan alamat lengkap sekolah"
                 rows={4}
               />
               {errors.address && (
@@ -338,16 +313,16 @@ export default function AddSchoolForm() {
             </div>
           </div>
 
-          {/* Contact Information */}
+          {/* Informasi Kontak */}
           <div className="space-y-6">
             <h3 className="text-lg text-card-foreground border-l-4 border-primary pl-4">
-              Contact Information
+              Informasi Kontak
             </h3>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-card-foreground">
-                  Email Address
+                  Alamat Email
                 </Label>
                 <Input
                   id="email"
@@ -357,7 +332,7 @@ export default function AddSchoolForm() {
                   className={`rounded-xl h-12 ${
                     errors.email ? "border-destructive" : "border-border/50"
                   }`}
-                  placeholder="school@example.com"
+                  placeholder="contoh: sekolah@example.com"
                 />
                 {errors.email && (
                   <p className="text-sm text-destructive flex items-center gap-1">
@@ -369,7 +344,7 @@ export default function AddSchoolForm() {
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-card-foreground">
-                  Phone Number
+                  Nomor Telepon
                 </Label>
                 <Input
                   id="phone"
@@ -378,7 +353,7 @@ export default function AddSchoolForm() {
                   className={`rounded-xl h-12 ${
                     errors.phone ? "border-destructive" : "border-border/50"
                   }`}
-                  placeholder="021-1234567"
+                  placeholder="contoh: 021-1234567"
                 />
                 {errors.phone && (
                   <p className="text-sm text-destructive flex items-center gap-1">
@@ -390,28 +365,28 @@ export default function AddSchoolForm() {
             </div>
           </div>
 
-          {/* Additional Notes */}
+          {/* Keterangan Tambahan */}
           <div className="space-y-6">
             <h3 className="text-lg text-card-foreground border-l-4 border-primary pl-4">
-              Additional Information
+              Keterangan Tambahan
             </h3>
 
             <div className="space-y-2">
               <Label htmlFor="notes" className="text-card-foreground">
-                Additional Notes
+                Catatan Tambahan
               </Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
                 onChange={(e) => handleInputChange("notes", e.target.value)}
                 className="rounded-xl border-border/50"
-                placeholder="Any additional information about the school (optional)"
+                placeholder="Tambahkan keterangan tambahan (opsional)"
                 rows={3}
               />
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Tombol Aksi */}
           <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border/50">
             <Button
               type="submit"
@@ -421,12 +396,12 @@ export default function AddSchoolForm() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
+                  Menyimpan...
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Save School
+                  Simpan Sekolah
                 </>
               )}
             </Button>
@@ -439,7 +414,7 @@ export default function AddSchoolForm() {
               className="rounded-xl h-12 flex-1 sm:flex-none sm:min-w-32"
             >
               <X className="h-4 w-4 mr-2" />
-              Cancel
+              Batal
             </Button>
           </div>
         </form>

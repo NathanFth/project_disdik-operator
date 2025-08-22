@@ -1,105 +1,146 @@
-// src/components/Sidebar.js
+// src/components/Sidebar.js - Updated dengan Plus Icon
+
 "use client";
 
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
+  GraduationCap,
+  Baby,
+  Blocks,
+  BookOpen,
   School,
-  Plus,
-  Upload,
-  History,
+  LogOut,
   Menu,
   X,
+  User,
+  Plus, // Added Plus icon
 } from "lucide-react";
-import { Button } from "./ui/button";
-import Link from "next/link";
-import { useState } from "react";
+import { auth, getRoleDisplayName } from "../../lib/auth";
 
-const menuItems = [
-  {
-    icon: LayoutDashboard,
-    label: "Dashboard",
-    href: "/dashboard",
-    active: false,
-  },
-  { icon: School, label: "Sekolah", href: "/schools", active: false },
-  { icon: Plus, label: "Tambah Sekolah", href: "/schools/add", active: false },
-  {
-    icon: Upload,
-    label: "Import Data",
-    href: "/schools/import",
-    active: false,
-  },
-  { icon: History, label: "Log Perubahan", href: "/change-log", active: false },
-];
+// Icon mapping - Added Plus
+const IconMap = {
+  LayoutDashboard,
+  GraduationCap,
+  Baby,
+  Blocks,
+  BookOpen,
+  School,
+  Plus, // Added Plus icon mapping
+};
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [menuItems, setMenuItems] = useState([]);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const userData = auth.getUser();
+    const userMenuItems = auth.getMenuItems();
+
+    setUser(userData);
+    setMenuItems(userMenuItems);
+
+    // Redirect ke login jika tidak authenticated
+    if (!userData) {
+      router.push("/login");
+    }
+  }, [router]);
+
+  const handleLogout = () => {
+    auth.logout();
+    router.push("/login");
+  };
+
+  // Jika tidak ada user (belum login), return null
+  if (!user) {
+    return null;
+  }
 
   return (
     <>
-      {/* Mobile menu button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="md:hidden fixed top-4 left-4 z-50 rounded-xl"
+      {/* Mobile Menu Button */}
+      <button
         onClick={() => setIsOpen(!isOpen)}
+        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-lg"
       >
-        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </Button>
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
 
-      {/* Overlay for mobile */}
+      {/* Sidebar */}
+      <div
+        className={`
+        fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-40 transform transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
+      `}
+      >
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-bold text-gray-800">DISDIK Operator</h2>
+          <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+            <User size={16} />
+            <div>
+              <div className="font-medium">{user.name}</div>
+              <div className="text-xs text-gray-500">
+                {getRoleDisplayName(user.role)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Menu */}
+        <nav className="flex-1 p-4">
+          <ul className="space-y-2">
+            {menuItems.map((item, index) => {
+              const IconComponent = IconMap[item.icon] || LayoutDashboard;
+              const isActive = pathname === item.href;
+
+              return (
+                <li key={index}>
+                  <Link
+                    href={item.href}
+                    className={`
+                      flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                      ${
+                        isActive
+                          ? "bg-blue-50 text-blue-700 border border-blue-200"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }
+                    `}
+                    onClick={() => setIsOpen(false)} // Close mobile menu
+                  >
+                    <IconComponent size={20} />
+                    <span className="font-medium">{item.name}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Logout Button */}
+        <div className="p-4 border-t border-gray-200">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <LogOut size={20} />
+            <span className="font-medium">Logout</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
           onClick={() => setIsOpen(false)}
         />
       )}
-
-      {/* Sidebar */}
-      <aside
-        className={`
-          fixed top-0 left-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border shadow-lg
-          transform transition-transform duration-200 ease-in-out
-          md:translate-x-0
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        `}
-      >
-        <div className="flex flex-col h-full overflow-y-auto">
-          <div className="p-5 border-b border-sidebar-border">
-            <h2 className="font-semibold text-sidebar-foreground">
-              e-PlanDISDIK
-            </h2>
-          </div>
-
-          <nav className="flex-1 p-4 space-y-2">
-            {menuItems.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <Link key={index} href={item.href} passHref>
-                  <Button
-                    asChild
-                    variant={item.active ? "default" : "ghost"}
-                    className={`
-                w-full justify-start rounded-xl h-12
-                ${
-                  item.active
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent"
-                }
-              `}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <div className="flex items-center">
-                      <Icon className="mr-3 h-5 w-5" />
-                      {item.label}
-                    </div>
-                  </Button>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      </aside>
     </>
   );
 }

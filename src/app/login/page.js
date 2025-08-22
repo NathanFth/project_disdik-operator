@@ -1,26 +1,57 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { UserIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  ExclamationCircleIcon,
+} from "@heroicons/react/20/solid";
+import { auth } from "../../lib/auth";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e) => {
+  // Cek jika sudah login
+  useEffect(() => {
+    if (auth.isAuthenticated()) {
+      router.push("/dashboard");
+    }
+  }, [router]);
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+    if (error) setError(""); // reset error ketika user mengetik lagi
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username || !password) {
-      alert("Username dan password wajib diisi!");
-      return;
+    setLoading(true);
+    setError("");
+
+    // simulasi delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const result = auth.login(formData.username, formData.password);
+
+    if (result.success) {
+      router.push("/dashboard");
+    } else {
+      setError(result.message);
     }
 
-    // Simpan session login
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("username", username);
-
-    // Redirect ke dashboard
-    router.push("/dashboard");
+    setLoading(false);
   };
 
   return (
@@ -35,8 +66,7 @@ export default function LoginPage() {
         <div className="relative z-10 text-center md:text-left">
           <h1 className="text-4xl font-bold mb-4">e-PlanDISDIK</h1>
           <p className="text-lg leading-snug">
-            Electronic Planning Dinas Pendidikan <br />
-            Kabupaten - Garut
+            Electronic Planning Dinas Pendidikan <br /> Kabupaten Garut
           </p>
           <button className="mt-6 bg-blue-500 hover:bg-blue-400 px-6 py-2 rounded-full font-medium">
             Selengkapnya
@@ -55,34 +85,68 @@ export default function LoginPage() {
           Silahkan Login untuk mengelola data
         </p>
 
-        <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-md space-y-4 bg-white"
+        >
+          {/* Error Message */}
+          {error && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              <ExclamationCircleIcon className="h-5 w-5" />
+              {error}
+            </div>
+          )}
+
+          {/* Username */}
           <div className="flex items-center border border-gray-300 rounded-full px-4 py-2">
             <UserIcon className="h-5 w-5 text-gray-400 mr-2" />
             <input
+              id="username"
+              name="username"
               type="text"
               placeholder="Username"
+              required
               className="w-full outline-none bg-transparent"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={formData.username}
+              onChange={handleChange}
             />
           </div>
 
-          <div className="flex items-center border border-gray-300 rounded-full px-4 py-2">
+          {/* Password */}
+          <div className="flex items-center border border-gray-300 rounded-full px-4 py-2 relative">
             <LockClosedIcon className="h-5 w-5 text-gray-400 mr-2" />
             <input
-              type="password"
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
-              className="w-full outline-none bg-transparent"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full outline-none bg-transparent pr-10"
+              value={formData.password}
+              onChange={handleChange}
             />
+            <button
+              type="button"
+              className="absolute right-3"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+              ) : (
+                <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+              )}
+            </button>
           </div>
 
+          {/* Tombol Login */}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white font-semibold py-2 rounded-full hover:bg-blue-500 transition"
+            disabled={loading}
+            className={`w-full bg-blue-600 text-white font-semibold py-2 rounded-full hover:bg-blue-500 transition ${
+              loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
           >
-            Masuk
+            {loading ? "Memproses..." : "Masuk"}
           </button>
         </form>
       </div>

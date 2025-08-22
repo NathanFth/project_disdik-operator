@@ -39,91 +39,92 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// Mock data tanpa interface
+// Mock data dengan terjemahan Bahasa Indonesia
 const mockChangeLogData = [
   {
     id: "1",
     timestamp: "2024-01-15 14:30:25",
-    user: "Admin User",
-    changeType: "Add",
+    user: "Pengguna Admin",
+    changeType: "Tambah",
     affectedItem: "SDN Merdeka 01",
-    description: "Added new school with NPSN 20101234",
+    description: "Menambahkan sekolah baru dengan NPSN 20101234",
     details:
-      "Complete school information added including contact details and address",
+      "Informasi sekolah lengkap ditambahkan termasuk detail kontak dan alamat",
     severity: "low",
   },
   {
     id: "2",
     timestamp: "2024-01-15 13:45:12",
     user: "Operator 1",
-    changeType: "Update",
+    changeType: "Ubah",
     affectedItem: "SMP Kartini 15",
     description:
-      "Updated school address from 'Jl. Old Address' to 'Jl. Kartini No. 456'",
-    details: "Address field updated by operator",
+      "Memperbarui alamat sekolah dari 'Jl. Alamat Lama' menjadi 'Jl. Kartini No. 456'",
+    details: "Kolom alamat diperbarui oleh operator",
     severity: "low",
   },
   {
     id: "3",
     timestamp: "2024-01-15 12:20:18",
-    user: "System",
-    changeType: "System",
-    affectedItem: "Data Import",
+    user: "Sistem",
+    changeType: "Sistem",
+    affectedItem: "Impor Data",
     description:
-      "Bulk import completed: 25 schools processed, 23 successful, 2 failed",
-    details: "Automated system process for bulk data import",
+      "Impor massal selesai: 25 sekolah diproses, 23 berhasil, 2 gagal",
+    details: "Proses sistem otomatis untuk impor data massal",
     severity: "medium",
   },
   {
     id: "4",
     timestamp: "2024-01-15 11:15:33",
     user: "Operator 2",
-    changeType: "Delete",
-    affectedItem: "PAUD Deleted School",
-    description: "Removed school with NPSN 20199999 (duplicate entry)",
+    changeType: "Hapus",
+    affectedItem: "PAUD Sekolah Terhapus",
+    description: "Menghapus sekolah dengan NPSN 20199999 (data ganda)",
     details:
-      "School was identified as duplicate and removed after verification",
+      "Sekolah diidentifikasi sebagai duplikat dan dihapus setelah verifikasi",
     severity: "high",
   },
   {
     id: "5",
     timestamp: "2024-01-15 10:05:44",
-    user: "Admin User",
-    changeType: "Update",
+    user: "Pengguna Admin",
+    changeType: "Ubah",
     affectedItem: "SMK Teknologi 12",
-    description: "Updated school status from 'Under Review' to 'Active'",
-    details: "Status changed after verification process completed",
+    description:
+      "Memperbarui status sekolah dari 'Dalam Tinjauan' menjadi 'Aktif'",
+    details: "Status diubah setelah proses verifikasi selesai",
     severity: "medium",
   },
   {
     id: "6",
     timestamp: "2024-01-14 16:22:15",
     user: "Operator 1",
-    changeType: "Add",
+    changeType: "Tambah",
     affectedItem: "TK Pelita Bangsa",
-    description: "Added new kindergarten with NPSN 20117890",
-    details: "New school registration processed",
+    description: "Menambahkan TK baru dengan NPSN 20117890",
+    details: "Pendaftaran sekolah baru diproses",
     severity: "low",
   },
   {
     id: "7",
     timestamp: "2024-01-14 15:18:27",
-    user: "System",
-    changeType: "System",
-    affectedItem: "Database Backup",
-    description: "Daily database backup completed successfully",
-    details: "Automated daily backup process",
+    user: "Sistem",
+    changeType: "Sistem",
+    affectedItem: "Pencadangan Database",
+    description: "Pencadangan basis data harian berhasil diselesaikan",
+    details: "Proses pencadangan harian otomatis",
     severity: "low",
   },
   {
     id: "8",
     timestamp: "2024-01-14 14:12:09",
     user: "Operator 3",
-    changeType: "Update",
+    changeType: "Ubah",
     affectedItem: "SMA Nusantara 03",
     description:
-      "Updated contact email from old@email.com to sma.nusantara03@email.com",
-    details: "Contact information updated per school request",
+      "Memperbarui email kontak dari old@email.com ke sma.nusantara03@email.com",
+    details: "Informasi kontak diperbarui sesuai permintaan sekolah",
     severity: "low",
   },
 ];
@@ -192,9 +193,9 @@ export default function ChangeLogPage() {
     setIsLoading(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success("Change log refreshed successfully");
+      toast.success("Catatan perubahan berhasil disegarkan");
     } catch (error) {
-      toast.error("Failed to refresh change log");
+      toast.error("Gagal menyegarkan catatan perubahan");
     } finally {
       setIsLoading(false);
     }
@@ -202,24 +203,26 @@ export default function ChangeLogPage() {
 
   const handleExport = () => {
     const csvContent = [
-      "Timestamp,User,Change Type,Affected Item,Description",
+      "Waktu,Pengguna,Tipe Perubahan,Item Terdampak,Deskripsi",
       ...filteredData.map(
         (entry) =>
           `"${entry.timestamp}","${entry.user}","${entry.changeType}","${entry.affectedItem}","${entry.description}"`
       ),
     ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `change_log_${new Date().toISOString().split("T")[0]}.csv`;
+    a.download = `catatan_perubahan_${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 
-    toast.success("Change log exported successfully!");
+    toast.success("Catatan perubahan berhasil diekspor!");
   };
 
   const getChangeTypeIcon = (type, severity) => {
@@ -231,33 +234,33 @@ export default function ChangeLogPage() {
         : "text-blue-600";
 
     switch (type) {
-      case "Add":
+      case "Tambah":
         return <Plus className={`h-4 w-4 ${iconClass}`} />;
-      case "Update":
+      case "Ubah":
         return <Edit className={`h-4 w-4 ${iconClass}`} />;
-      case "Delete":
+      case "Hapus":
         return <Trash2 className={`h-4 w-4 ${iconClass}`} />;
-      case "System":
+      case "Sistem":
         return <Settings className={`h-4 w-4 ${iconClass}`} />;
       default:
         return <Info className={`h-4 w-4 ${iconClass}`} />;
     }
   };
 
-  const getChangeTypeBadge = (type, severity) => {
+  const getChangeTypeBadge = (type) => {
     let colorClass = "";
 
     switch (type) {
-      case "Add":
+      case "Tambah":
         colorClass = "bg-green-100 text-green-700 border-green-200";
         break;
-      case "Update":
+      case "Ubah":
         colorClass = "bg-blue-100 text-blue-700 border-blue-200";
         break;
-      case "Delete":
+      case "Hapus":
         colorClass = "bg-red-100 text-red-700 border-red-200";
         break;
-      case "System":
+      case "Sistem":
         colorClass = "bg-purple-100 text-purple-700 border-purple-200";
         break;
       default:
@@ -274,8 +277,15 @@ export default function ChangeLogPage() {
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp.replace(" ", "T"));
     return {
-      date: date.toLocaleDateString(),
-      time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      date: date.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
+      time: date.toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     };
   };
 
@@ -285,18 +295,18 @@ export default function ChangeLogPage() {
 
   return (
     <div className="space-y-6">
-      {/* Filters Panel */}
+      {/* Panel Filter */}
       <Card className="rounded-xl shadow-sm border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-primary" />
-            Filters & Search
+            Filter & Pencarian
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Search */}
+          {/* Pencarian */}
           <div className="space-y-2">
-            <Label htmlFor="search">Search</Label>
+            <Label htmlFor="search">Cari</Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -304,7 +314,7 @@ export default function ChangeLogPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 rounded-xl"
-                placeholder="Search by school name, NPSN, user, or description..."
+                placeholder="Cari berdasarkan nama sekolah, NPSN, pengguna, atau deskripsi..."
               />
               {searchTerm && (
                 <Button
@@ -319,10 +329,10 @@ export default function ChangeLogPage() {
             </div>
           </div>
 
-          {/* Filter Row */}
+          {/* Baris Filter */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="dateFrom">Date From</Label>
+              <Label htmlFor="dateFrom">Dari Tanggal</Label>
               <Input
                 id="dateFrom"
                 type="date"
@@ -333,7 +343,7 @@ export default function ChangeLogPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="dateTo">Date To</Label>
+              <Label htmlFor="dateTo">Sampai Tanggal</Label>
               <Input
                 id="dateTo"
                 type="date"
@@ -344,13 +354,13 @@ export default function ChangeLogPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="userFilter">User</Label>
+              <Label htmlFor="userFilter">Pengguna</Label>
               <Select value={userFilter} onValueChange={setUserFilter}>
                 <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder="All Users" />
+                  <SelectValue placeholder="Semua Pengguna" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Users</SelectItem>
+                  <SelectItem value="all">Semua Pengguna</SelectItem>
                   {uniqueUsers.map((user) => (
                     <SelectItem key={user} value={user}>
                       {user}
@@ -361,26 +371,26 @@ export default function ChangeLogPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="changeType">Change Type</Label>
+              <Label htmlFor="changeType">Tipe Perubahan</Label>
               <Select
                 value={changeTypeFilter}
                 onValueChange={setChangeTypeFilter}
               >
                 <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder="All Types" />
+                  <SelectValue placeholder="Semua Tipe" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="Add">Add</SelectItem>
-                  <SelectItem value="Update">Update</SelectItem>
-                  <SelectItem value="Delete">Delete</SelectItem>
-                  <SelectItem value="System">System</SelectItem>
+                  <SelectItem value="all">Semua Tipe</SelectItem>
+                  <SelectItem value="Tambah">Tambah</SelectItem>
+                  <SelectItem value="Ubah">Ubah</SelectItem>
+                  <SelectItem value="Hapus">Hapus</SelectItem>
+                  <SelectItem value="Sistem">Sistem</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Tombol Aksi */}
           <div className="flex flex-wrap gap-3">
             <Button
               variant="outline"
@@ -388,7 +398,7 @@ export default function ChangeLogPage() {
               className="rounded-xl"
             >
               <X className="h-4 w-4 mr-2" />
-              Clear Filters
+              Hapus Filter
             </Button>
             <Button
               variant="outline"
@@ -399,33 +409,33 @@ export default function ChangeLogPage() {
               <RefreshCw
                 className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
               />
-              Refresh
+              Segarkan
             </Button>
             <Button onClick={handleExport} className="rounded-xl">
               <Download className="h-4 w-4 mr-2" />
-              Export Logs
+              Ekspor Log
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Results Summary */}
+      {/* Ringkasan Hasil */}
       {filteredData.length !== changeLogData.length && (
         <Alert className="rounded-xl">
           <Info className="h-4 w-4" />
           <AlertDescription>
-            Showing {filteredData.length} of {changeLogData.length} total log
-            entries
+            Menampilkan {filteredData.length} dari {changeLogData.length} total
+            entri log
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Change Log Table */}
+      {/* Tabel Catatan Perubahan */}
       <Card className="rounded-xl shadow-sm border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <History className="h-5 w-5 text-primary" />
-            Change Log Entries
+            Catatan Perubahan
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -433,7 +443,7 @@ export default function ChangeLogPage() {
             <div className="text-center py-12">
               <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg text-card-foreground mb-2">
-                No logs found
+                Tidak ada log yang ditemukan
               </h3>
               <p className="text-muted-foreground">
                 {searchTerm ||
@@ -441,8 +451,8 @@ export default function ChangeLogPage() {
                 changeTypeFilter !== "all" ||
                 dateFrom ||
                 dateTo
-                  ? "Try adjusting your filters to see more results."
-                  : "No change log entries available at this time."}
+                  ? "Coba sesuaikan filter Anda untuk melihat lebih banyak hasil."
+                  : "Tidak ada entri catatan perubahan yang tersedia saat ini."}
               </p>
             </div>
           ) : (
@@ -451,11 +461,11 @@ export default function ChangeLogPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50">
-                      <TableHead className="w-40">Timestamp</TableHead>
-                      <TableHead className="w-32">User</TableHead>
-                      <TableHead className="w-24">Type</TableHead>
-                      <TableHead>Affected Item</TableHead>
-                      <TableHead>Description</TableHead>
+                      <TableHead className="w-40">Waktu</TableHead>
+                      <TableHead className="w-32">Pengguna</TableHead>
+                      <TableHead className="w-24">Tipe</TableHead>
+                      <TableHead>Item Terdampak</TableHead>
+                      <TableHead>Deskripsi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -483,10 +493,7 @@ export default function ChangeLogPage() {
                                 entry.changeType,
                                 entry.severity
                               )}
-                              {getChangeTypeBadge(
-                                entry.changeType,
-                                entry.severity
-                              )}
+                              {getChangeTypeBadge(entry.changeType)}
                             </div>
                           </TableCell>
                           <TableCell>{entry.affectedItem}</TableCell>
@@ -507,14 +514,14 @@ export default function ChangeLogPage() {
                 </Table>
               </div>
 
-              {/* Pagination placeholder */}
+              {/* Placeholder Paginasi */}
               <div className="flex items-center justify-between mt-6">
                 <p className="text-sm text-muted-foreground">
-                  Showing {filteredData.length} entries
+                  Menampilkan {filteredData.length} entri
                 </p>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="rounded-lg">
-                    Previous
+                    Sebelumnya
                   </Button>
                   <Button
                     variant="outline"
@@ -524,7 +531,7 @@ export default function ChangeLogPage() {
                     1
                   </Button>
                   <Button variant="outline" size="sm" className="rounded-lg">
-                    Next
+                    Berikutnya
                   </Button>
                 </div>
               </div>
