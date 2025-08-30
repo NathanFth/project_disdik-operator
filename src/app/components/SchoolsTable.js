@@ -23,139 +23,322 @@ const initialSchoolsData = [
   {
     id: "1",
     no: 1,
-    district: "Garut",
+    // Basic Info
+    noUrut: "001",
+    noUrutSekolah: "SD001",
+    kecamatan: "Garut",
     npsn: "20101234",
-    name: "SDN 01 Garut",
+    namaSekolah: "SDN 01 Garut",
     schoolType: "SD",
-    status: "Aktif",
-    statusColor: "bg-green-100 text-green-700",
+    status: "Negeri",
+    dataStatus: "Aktif",
+    dataStatusColor: "bg-green-100 text-green-700",
+    
+    // Siswa
+    siswa: {
+      jumlahSiswa: 485,
+      kelas1: { l: 45, p: 40 },
+      kelas2: { l: 42, p: 38 },
+      kelas3: { l: 40, p: 42 },
+      kelas4: { l: 38, p: 40 },
+      kelas5: { l: 35, p: 37 },
+      kelas6: { l: 33, p: 35 },
+    },
+    
+    // Siswa Berkebutuhan Khusus
+    siswaAbk: {
+      kelas1: { l: 2, p: 1 },
+      kelas2: { l: 1, p: 2 },
+      kelas3: { l: 0, p: 1 },
+      kelas4: { l: 1, p: 0 },
+      kelas5: { l: 0, p: 1 },
+      kelas6: { l: 1, p: 0 },
+    },
+    
+    // Siswa Melanjutkan
+    siswaLanjutDalamKab: {
+      smp: 25,
+      mts: 8,
+      pontren: 2,
+      pkbm: 0,
+    },
+    siswaLanjutLuarKab: {
+      smp: 3,
+      mts: 1,
+      pontren: 0,
+      pkbm: 0,
+    },
+    siswaTidakLanjut: 1,
+    
+    // Rombel
+    rombel: {
+      kelas1: 3,
+      kelas2: 3,
+      kelas3: 3,
+      kelas4: 3,
+      kelas5: 2,
+      kelas6: 2,
+    },
+    
+    // Prasarana
+    prasarana: {
+      ukuran: {
+        tanah: 2500,
+        bangunan: 800,
+        halaman: 1200,
+      },
+      gedung: {
+        jumlah: 2,
+      },
+      ruangKelas: {
+        jumlah: 16,
+        baik: 14,
+        rusakRingan: 2,
+        rusakSedang: 0,
+        rusakBerat: 0,
+        rusakTotal: 0,
+        kelebihan: 0,
+        kurangRkb: 0,
+        rkbTambahan: 0,
+        lahan: "Ada",
+      },
+      ruangPerpustakaan: {
+        jumlah: 1,
+        baik: 1,
+        rusakSedang: 0,
+        rusakBerat: 0,
+      },
+      ruangLaboratorium: {
+        jumlah: 1,
+        baik: 1,
+        rusakSedang: 0,
+        rusakBerat: 0,
+      },
+      ruangGuru: {
+        jumlah: 1,
+        baik: 1,
+        rusakSedang: 0,
+        rusakBerat: 0,
+      },
+      ruangUks: {
+        jumlah: 1,
+        baik: 1,
+        rusakSedang: 0,
+        rusakBerat: 0,
+      },
+      toiletGuruSiswa: {
+        jumlah: 4,
+        baik: 4,
+        rusakSedang: 0,
+        rusakBerat: 0,
+      },
+      rumahDinas: {
+        jumlah: 0,
+        baik: 0,
+        rusakSedang: 0,
+        rusakBerat: 0,
+      },
+      mebeulair: {
+        meja: { jumlah: 250, baik: 240, rusak: 10 },
+        kursi: { jumlah: 500, baik: 485, rusak: 15 },
+      },
+      chromebook: 25,
+    },
+    
+    // Kelembagaan
+    kelembagaan: {
+      peralatanRumahTangga: "Baik",
+      pembinaan: "Sudah",
+      asesmen: "Sudah",
+      bop: {
+        pengelola: "Kepala Sekolah",
+        tenagaPeningkatan: "Guru Senior",
+      },
+      menyelenggarakanBelajar: "Ya",
+      melaksanakanRekomendasi: "Ya",
+      siapDievaluasi: "Ya",
+      perizinan: {
+        pengendalian: "Lengkap",
+        kelayakan: "Sesuai",
+      },
+      kurikulum: {
+        silabus: "Kurikulum Merdeka",
+        kompetensiDasar: "Sesuai Standar",
+      },
+    },
+    
+    // Guru
+    guru: {
+      jumlahGuru: 24,
+      pns: 18,
+      pppk: 4,
+      pppkParuhWaktu: 0,
+      nonAsnDapodik: 2,
+      nonAsnTidakDapodik: 0,
+      kekuranganGuru: 2,
+    },
+    
+    // Metadata
     address: "Jl. Contoh No. 123, Garut",
     email: "sdn.01garut@education.go.id",
     phone: "0265-1234567",
-    studentsCount: 485,
-    teachersCount: 24,
-    facilitiesCount: 15,
     lastUpdated: "2025-08-20",
   },
   {
     id: "2",
     no: 2,
-    district: "Leuwigoong",
+    noUrut: "002",
+    noUrutSekolah: "SMP001",
+    kecamatan: "Leuwigoong",
     npsn: "20105678",
-    name: "SMPN 1 Leuwigoong",
+    namaSekolah: "SMPN 1 Leuwigoong",
     schoolType: "SMP",
-    status: "Data Belum Lengkap",
-    statusColor: "bg-yellow-100 text-yellow-700",
+    status: "Negeri",
+    dataStatus: "Data Belum Lengkap",
+    dataStatusColor: "bg-yellow-100 text-yellow-700",
+    
+    siswa: {
+      jumlahSiswa: 654,
+      kelas1: { l: 110, p: 108 },
+      kelas2: { l: 105, p: 112 },
+      kelas3: { l: 108, p: 111 },
+      kelas4: { l: 0, p: 0 },
+      kelas5: { l: 0, p: 0 },
+      kelas6: { l: 0, p: 0 },
+    },
+    
+    siswaAbk: {
+      kelas1: { l: 3, p: 2 },
+      kelas2: { l: 2, p: 1 },
+      kelas3: { l: 1, p: 2 },
+      kelas4: { l: 0, p: 0 },
+      kelas5: { l: 0, p: 0 },
+      kelas6: { l: 0, p: 0 },
+    },
+    
+    siswaLanjutDalamKab: {
+      smp: 0, // SMP tidak relevan
+      mts: 0,
+      pontren: 15,
+      pkbm: 2,
+    },
+    siswaLanjutLuarKab: {
+      smp: 0,
+      mts: 0,
+      pontren: 5,
+      pkbm: 0,
+    },
+    siswaTidakLanjut: 3,
+    
+    rombel: {
+      kelas1: 7,
+      kelas2: 7,
+      kelas3: 7,
+      kelas4: 0,
+      kelas5: 0,
+      kelas6: 0,
+    },
+    
+    prasarana: {
+      ukuran: {
+        tanah: 4000,
+        bangunan: 1200,
+        halaman: 2000,
+      },
+      gedung: {
+        jumlah: 3,
+      },
+      ruangKelas: {
+        jumlah: 21,
+        baik: 18,
+        rusakRingan: 2,
+        rusakSedang: 1,
+        rusakBerat: 0,
+        rusakTotal: 0,
+        kelebihan: 0,
+        kurangRkb: 0,
+        rkbTambahan: 0,
+        lahan: "Ada",
+      },
+      ruangPerpustakaan: {
+        jumlah: 1,
+        baik: 1,
+        rusakSedang: 0,
+        rusakBerat: 0,
+      },
+      ruangLaboratorium: {
+        jumlah: 2,
+        baik: 2,
+        rusakSedang: 0,
+        rusakBerat: 0,
+      },
+      ruangGuru: {
+        jumlah: 1,
+        baik: 1,
+        rusakSedang: 0,
+        rusakBerat: 0,
+      },
+      ruangUks: {
+        jumlah: 1,
+        baik: 1,
+        rusakSedang: 0,
+        rusakBerat: 0,
+      },
+      toiletGuruSiswa: {
+        jumlah: 6,
+        baik: 5,
+        rusakSedang: 1,
+        rusakBerat: 0,
+      },
+      rumahDinas: {
+        jumlah: 1,
+        baik: 1,
+        rusakSedang: 0,
+        rusakBerat: 0,
+      },
+      mebeulair: {
+        meja: { jumlah: 350, baik: 320, rusak: 30 },
+        kursi: { jumlah: 700, baik: 650, rusak: 50 },
+      },
+      chromebook: 40,
+    },
+    
+    kelembagaan: {
+      peralatanRumahTangga: "Perlu Rehabilitasi",
+      pembinaan: "Belum",
+      asesmen: "Belum",
+      bop: {
+        pengelola: "Kepala Sekolah",
+        tenagaPeningkatan: "Wakil Kepala",
+      },
+      menyelenggarakanBelajar: "Ya",
+      melaksanakanRekomendasi: "Tidak",
+      siapDievaluasi: "Tidak",
+      perizinan: {
+        pengendalian: "Sedang Proses",
+        kelayakan: "Perlu Perbaikan",
+      },
+      kurikulum: {
+        silabus: "Kurikulum 2013",
+        kompetensiDasar: "Perlu Update",
+      },
+    },
+    
+    guru: {
+      jumlahGuru: 32,
+      pns: 22,
+      pppk: 6,
+      pppkParuhWaktu: 2,
+      nonAsnDapodik: 2,
+      nonAsnTidakDapodik: 0,
+      kekuranganGuru: 5,
+    },
+    
     address: "Jl. Contoh No. 45, Leuwigoong",
     email: "smpn.1leuwigoong@education.go.id",
     phone: "0265-2345678",
-    studentsCount: 654,
-    teachersCount: 32,
-    facilitiesCount: 18,
     lastUpdated: "2025-08-19",
-  },
-  {
-    id: "3",
-    no: 3,
-    district: "Leuwigoong",
-    npsn: "20109012",
-    name: "SMAN 10 Garut",
-    schoolType: "SMA",
-    status: "Aktif",
-    statusColor: "bg-green-100 text-green-700",
-    address: "Jl. Contoh No. 67, Leuwigoong",
-    email: "sman10.garut@education.go.id",
-    phone: "0265-3456789",
-    studentsCount: 842,
-    teachersCount: 45,
-    facilitiesCount: 25,
-    lastUpdated: "2025-08-18",
-  },
-  {
-    id: "4",
-    no: 4,
-    district: "Banyuresmi",
-    npsn: "20113456",
-    name: "SMK Alghifari",
-    schoolType: "SMK",
-    status: "Sedang Ditinjau",
-    statusColor: "bg-blue-100 text-blue-700",
-    address: "Jl. Contoh No. 89, Banyuresmi",
-    email: "smk.alghifari@education.go.id",
-    phone: "0265-4567890",
-    studentsCount: 756,
-    teachersCount: 38,
-    facilitiesCount: 22,
-    lastUpdated: "2025-08-17",
-  },
-  {
-    id: "5",
-    no: 5,
-    district: "Leuwigoong",
-    npsn: "20117890",
-    name: "TK Pelita Bangsa",
-    schoolType: "TK",
-    status: "Aktif",
-    statusColor: "bg-green-100 text-green-700",
-    address: "Jl. Contoh No. 12, Leuwigoong",
-    email: "tk.pelitabangsa@education.go.id",
-    phone: "0265-5678901",
-    studentsCount: 156,
-    teachersCount: 12,
-    facilitiesCount: 8,
-    lastUpdated: "2025-08-21",
-  },
-  {
-    id: "6",
-    no: 6,
-    district: "Banyuresmi",
-    npsn: "20121234",
-    name: "PAUD Manbaul Ulum",
-    schoolType: "PAUD",
-    status: "Aktif",
-    statusColor: "bg-green-100 text-green-700",
-    address: "Jl. Contoh No. 34, Banyuresmi",
-    email: "paud.manbaululum@education.go.id",
-    phone: "0265-6789012",
-    studentsCount: 95,
-    teachersCount: 8,
-    facilitiesCount: 6,
-    lastUpdated: "2025-08-21",
-  },
-  {
-    id: "7",
-    no: 7,
-    district: "Garut",
-    npsn: "20125678",
-    name: "PKBM Cerdas Mandiri",
-    schoolType: "PKBM",
-    status: "Aktif",
-    statusColor: "bg-green-100 text-green-700",
-    address: "Jl. Contoh No. 56, Garut",
-    email: "pkbm.cerdasmandiri@education.go.id",
-    phone: "0265-7890123",
-    studentsCount: 234,
-    teachersCount: 15,
-    facilitiesCount: 10,
-    lastUpdated: "2025-08-16",
-  },
-  {
-    id: "8",
-    no: 8,
-    district: "Garut",
-    npsn: "20129012",
-    name: "TK Nurul Huda",
-    schoolType: "TK",
-    status: "Data Belum Lengkap",
-    statusColor: "bg-yellow-100 text-yellow-700",
-    address: "Jl. Contoh No. 78, Garut",
-    email: "tk.nurulhuda@education.go.id",
-    phone: "0265-8901234",
-    studentsCount: 89,
-    teachersCount: 6,
-    facilitiesCount: 5,
-    lastUpdated: "2025-08-17",
-  },
+  }
 ];
 
 export default function SchoolsTable({ operatorType }) {
@@ -174,9 +357,9 @@ export default function SchoolsTable({ operatorType }) {
   const filteredSchools = useMemo(() => {
     return filteredByOperatorType.filter(
       (school) =>
-        school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        school.namaSekolah.toLowerCase().includes(searchTerm.toLowerCase()) ||
         school.npsn.includes(searchTerm) ||
-        school.district.toLowerCase().includes(searchTerm.toLowerCase())
+        school.kecamatan.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [filteredByOperatorType, searchTerm]);
 
@@ -287,6 +470,8 @@ export default function SchoolsTable({ operatorType }) {
                       <TableHead>NPSN</TableHead>
                       <TableHead>Nama {operatorType}</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Jumlah Siswa</TableHead>
+                      <TableHead>Jumlah Guru</TableHead>
                       <TableHead className="w-32">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -297,21 +482,27 @@ export default function SchoolsTable({ operatorType }) {
                           {index + 1}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {school.district}
+                          {school.kecamatan}
                         </TableCell>
                         <TableCell className="font-mono text-sm">
                           {school.npsn}
                         </TableCell>
                         <TableCell className="font-medium">
-                          {school.name}
+                          {school.namaSekolah}
                         </TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className={`rounded-full ${school.statusColor}`}
+                            className={`rounded-full ${school.dataStatusColor}`}
                           >
-                            {school.status}
+                            {school.dataStatus}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {school.siswa.jumlahSiswa}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {school.guru.jumlahGuru}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
