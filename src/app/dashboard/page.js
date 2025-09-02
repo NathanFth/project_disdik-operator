@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import Sidebar from "../components/Sidebar";
 import StatCards from "../components/StatCards";
 import TopNavbar from "../components/TopNavbar";
-import SchoolsTable from "../components/SchoolsTable";
 import { LayoutDashboard, Loader2, Plus, Edit, BarChart3 } from "lucide-react";
 import { auth, getRoleDisplayName } from "../../lib/auth";
 
@@ -160,8 +159,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Schools Data Table - Khusus untuk Role User */}
-            <SchoolsTable operatorType={user.role} />
+            
 
             {/* Info Panel untuk Operator */}
             <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../../components/Sidebar";
 import TopNavbar from "../../components/TopNavbar";
+import SchoolsTable from "../../components/SchoolsTable";
 import { GraduationCap, Loader2 } from "lucide-react"; // ikon PKBM pakai BookOpen
 import { auth } from "../../../lib/auth";
 
@@ -54,6 +55,7 @@ export default function PkbmPage() {
           <main className="p-6 space-y-8">
             {/* Header */}
             <div className="mb-8">
+              {/* Schools Data Table - Khusus untuk Role User */}
               <h1 className="text-3xl text-foreground mb-2 flex items-center gap-3">
                 <GraduationCap className="h-8 w-8 text-primary" />
                 Data PKBM
@@ -69,13 +71,7 @@ export default function PkbmPage() {
 
               {/* Table or content here */}
               <div className="text-center py-12 text-gray-500">
-                <GraduationCap className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg mb-2">Data PKBM</p>
-                <p className="text-sm">
-                  {user.role === "PKBM"
-                    ? "Kelola data PKBM di area Anda"
-                    : "Lihat data PKBM seluruh area"}
-                </p>
+                <SchoolsTable operatorType={user.role} />
               </div>
             </div>
           </main>

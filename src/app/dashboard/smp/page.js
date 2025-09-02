@@ -1,13 +1,13 @@
-
-// app/dashboard/smp/page.js  
+// app/dashboard/smp/page.js
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "../../../components/Sidebar";
 import TopNavbar from "../../../components/TopNavbar";
+import SchoolsTable from "../../components/SchoolsTable";
 import { School, Loader2 } from "lucide-react";
-import { auth } from '../../../lib/auth';
+import { auth } from "../../../lib/auth";
 
 export default function SmpPage() {
   const [user, setUser] = useState(null);
@@ -16,18 +16,18 @@ export default function SmpPage() {
 
   useEffect(() => {
     const userData = auth.getUser();
-    
+
     if (!userData) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
     // Check access permission
-    if (!auth.hasAccess('/dashboard/smp')) {
-      router.push('/dashboard');
+    if (!auth.hasAccess("/dashboard/smp")) {
+      router.push("/dashboard");
       return;
     }
-    
+
     setUser(userData);
     setLoading(false);
   }, [router]);
@@ -55,6 +55,7 @@ export default function SmpPage() {
           <main className="p-6 space-y-8">
             {/* Header */}
             <div className="mb-8">
+              {/* Schools Data Table - Khusus untuk Role User */}
               <h1 className="text-3xl text-foreground mb-2 flex items-center gap-3">
                 <School className="h-8 w-8 text-primary" />
                 Data SMP
@@ -67,14 +68,10 @@ export default function SmpPage() {
             {/* Content */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-semibold mb-4">Daftar Sekolah SMP</h2>
-              
+
               {/* Table or content here */}
               <div className="text-center py-12 text-gray-500">
-                <School className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg mb-2">Data SMP</p>
-                <p className="text-sm">
-                  {user.role === 'SMP' ? 'Kelola data SMP di area Anda' : 'Lihat data SMP seluruh area'}
-                </p>
+                <SchoolsTable operatorType={user.role} />
               </div>
             </div>
           </main>

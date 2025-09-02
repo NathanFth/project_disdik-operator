@@ -50,6 +50,7 @@ export default function PaudPage() {
           <main className="p-6 space-y-8">
             {/* Header */}
             <div className="mb-8">
+              {/* Schools Data Table - Khusus untuk Role User */}
               <h1 className="text-3xl text-foreground mb-2 flex items-center gap-3">
                 <Baby className="h-8 w-8 text-primary" />
                 Data PAUD
@@ -58,9 +59,14 @@ export default function PaudPage() {
                 Kelola data Pendidikan Anak Usia Dini (PAUD)
               </p>
             </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-xl font-semibold mb-4">Daftar PAUD</h2>
 
-            {/* Schools Table */}
-            <SchoolsTable operatorType="PAUD" />
+              {/* Table or content here */}
+              <div className="text-center py-12 text-gray-500">
+                <SchoolsTable operatorType={user.role} />
+              </div>
+            </div>
           </main>
         </div>
       </div>
