@@ -1,5 +1,3 @@
-// src/components/Sidebar.js - Updated dengan Plus Icon
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,11 +14,10 @@ import {
   Menu,
   X,
   User,
-  Plus, // Added Plus icon
+  Plus,
 } from "lucide-react";
 import { auth, getRoleDisplayName } from "../../lib/auth";
 
-// Icon mapping - Added Plus
 const IconMap = {
   LayoutDashboard,
   GraduationCap,
@@ -28,7 +25,7 @@ const IconMap = {
   Blocks,
   BookOpen,
   School,
-  Plus, // Added Plus icon mapping
+  Plus,
 };
 
 export default function Sidebar() {
@@ -40,15 +37,14 @@ export default function Sidebar() {
 
   useEffect(() => {
     const userData = auth.getUser();
-    const userMenuItems = auth.getMenuItems();
-
-    setUser(userData);
-    setMenuItems(userMenuItems);
-
-    // Redirect ke login jika tidak authenticated
     if (!userData) {
       router.push("/login");
+      return;
     }
+
+    const userMenuItems = auth.getMenuItems();
+    setUser(userData);
+    setMenuItems(userMenuItems);
   }, [router]);
 
   const handleLogout = () => {
@@ -56,9 +52,8 @@ export default function Sidebar() {
     router.push("/login");
   };
 
-  // Jika tidak ada user (belum login), return null
   if (!user) {
-    return null;
+    return null; // Atau tampilkan skeleton/loading state
   }
 
   return (
@@ -67,6 +62,7 @@ export default function Sidebar() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-lg"
+        aria-label="Toggle Menu"
       >
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
@@ -95,12 +91,13 @@ export default function Sidebar() {
         {/* Navigation Menu */}
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
-            {menuItems.map((item, index) => {
+            {menuItems.map((item) => {
               const IconComponent = IconMap[item.icon] || LayoutDashboard;
               const isActive = pathname === item.href;
 
               return (
-                <li key={index}>
+                // FIX: Menggunakan item.href sebagai key yang unik dan stabil
+                <li key={item.href}>
                   <Link
                     href={item.href}
                     className={`
