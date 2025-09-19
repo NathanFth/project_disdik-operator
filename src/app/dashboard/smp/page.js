@@ -3,8 +3,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "../../../components/Sidebar";
-import TopNavbar from "../../../components/TopNavbar";
+import Sidebar from "../../components/Sidebar";
+import TopNavbar from "../../components/TopNavbar";
 import SchoolsTable from "../../components/SchoolsTable";
 import { School, Loader2 } from "lucide-react";
 import { auth } from "../../../lib/auth";

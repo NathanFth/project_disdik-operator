@@ -19,26 +19,57 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { School, Search, Edit, Eye, Plus, Loader2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import {
+  School,
+  Search,
+  Edit,
+  Eye,
+  Plus,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { SchoolDetailsModal } from "./SchoolDetailsModal";
 import { EditSchoolModal } from "./EditSchoolModal";
 
-// FUNGSI UTAMA: Menggabungkan dan mengubah data dari sd_new.json dan kecamatan.geojson
-const transformAndFlattenData = (schoolData, kecamatanGeoJson, schoolType) => {
-  if (!schoolData || typeof schoolData !== "object") {
-    console.error("Format sd_new.json tidak valid.");
-    return { allSchools: [], kecamatanList: [] };
-  }
+// --- KONFIGURASI FILE DATA ---
+const DATA_FILES = {
+  SD: "/data/sd_new.json",
+  PAUD: "/data/paud.json",
+  PKBM: "/data/pkbm.json",
+  TK: "/data/paud.json",
+  SMP: "/data/smp.json",
+};
 
-  const kecamatanMap = new Map();
-  kecamatanGeoJson?.features?.forEach(feature => {
-    const props = feature.properties;
-    if (props && props.KECAMATAN) {
-      kecamatanMap.set(props.KECAMATAN.toUpperCase(), props);
-    }
-  });
+// --- DATA KOSONG SEBAGAI PENGAMAN (PLACEHOLDER) ---
+const EMPTY_SISWA_DETAIL = {
+  kelas1: { l: 0, p: 0 },
+  kelas2: { l: 0, p: 0 },
+  kelas3: { l: 0, p: 0 },
+  kelas4: { l: 0, p: 0 },
+  kelas5: { l: 0, p: 0 },
+  kelas6: { l: 0, p: 0 },
+  kelas7: { l: 0, p: 0 },
+  kelas8: { l: 0, p: 0 },
+  kelas9: { l: 0, p: 0 },
+};
 
+const EMPTY_GURU_DETAIL = {
+  jumlahGuru: 0,
+  pns: 0,
+  pppk: 0,
+  pppkParuhWaktu: 0,
+  nonAsnDapodik: 0,
+  nonAsnTidakDapodik: 0,
+  kekuranganGuru: 0,
+};
+
+// --- FUNGSI TRANSFORMASI ---
+
+const transformSdData = (schoolData, schoolType) => {
   const allSchools = Object.entries(schoolData).flatMap(
     ([kecamatanName, schoolsInKecamatan]) =>
       schoolsInKecamatan.map((school) => ({
@@ -46,95 +77,214 @@ const transformAndFlattenData = (schoolData, kecamatanGeoJson, schoolType) => {
         kecamatan: kecamatanName,
       }))
   );
-  
-  const kecamatanList = [...new Set(allSchools.map(s => s.kecamatan))].sort();
 
-  const transformedSchools = allSchools.map((school, index) => {
-    const noUrutStr = (index + 1).toString().padStart(3, "0");
-    const jumlahSiswa = parseInt(school.student_count, 10) || 0;
+  return allSchools.map((school) => ({
+    id: school.npsn,
+    namaSekolah: school.name,
+    npsn: school.npsn,
+    kecamatan: school.kecamatan,
+    status: school.type,
+    schoolType: schoolType,
+    jenjang: schoolType,
+    dataStatus:
+      (parseInt(school.student_count, 10) || 0) > 0
+        ? "Aktif"
+        : "Data Belum Lengkap",
+    st_male: Object.keys(school.classes)
+      .filter((k) => k.endsWith("_L"))
+      .reduce((sum, key) => sum + (school.classes[key] || 0), 0),
+    st_female: Object.keys(school.classes)
+      .filter((k) => k.endsWith("_P"))
+      .reduce((sum, key) => sum + (school.classes[key] || 0), 0),
+    siswa: {
+      jumlahSiswa: parseInt(school.student_count, 10) || 0,
+      kelas1: {
+        l: parseInt(school.classes?.["1_L"], 10) || 0,
+        p: parseInt(school.classes?.["1_P"], 10) || 0,
+      },
+      kelas2: {
+        l: parseInt(school.classes?.["2_L"], 10) || 0,
+        p: parseInt(school.classes?.["2_P"], 10) || 0,
+      },
+      kelas3: {
+        l: parseInt(school.classes?.["3_L"], 10) || 0,
+        p: parseInt(school.classes?.["3_P"], 10) || 0,
+      },
+      kelas4: {
+        l: parseInt(school.classes?.["4_L"], 10) || 0,
+        p: parseInt(school.classes?.["4_P"], 10) || 0,
+      },
+      kelas5: {
+        l: parseInt(school.classes?.["5_L"], 10) || 0,
+        p: parseInt(school.classes?.["5_P"], 10) || 0,
+      },
+      kelas6: {
+        l: parseInt(school.classes?.["6_L"], 10) || 0,
+        p: parseInt(school.classes?.["6_P"], 10) || 0,
+      },
+    },
+    rombel: {
+      kelas1: school.rombel?.["1"] || 0,
+      kelas2: school.rombel?.["2"] || 0,
+      kelas3: school.rombel?.["3"] || 0,
+      kelas4: school.rombel?.["4"] || 0,
+      kelas5: school.rombel?.["5"] || 0,
+      kelas6: school.rombel?.["6"] || 0,
+    },
+    prasarana: {
+      ukuran: {
+        tanah: school.facilities?.land_area,
+        bangunan: school.facilities?.building_area,
+        halaman: school.facilities?.yard_area,
+      },
+      ruangKelas: {
+        jumlah: school.class_condition?.total_room,
+        baik: school.class_condition?.classrooms_good,
+        rusakSedang: school.class_condition?.classrooms_moderate_damage,
+        rusakBerat: school.class_condition?.classrooms_heavy_damage,
+      },
+      ruangPerpustakaan: school.library,
+      ruangLaboratorium: school.laboratory,
+      ruangGuru: school.teacher_room,
+      ruangUks: school.uks_room,
+      toiletGuruSiswa: school.toilets,
+      rumahDinas: school.official_residences,
+      mebeulair: school.furniture,
+    },
+    guru: EMPTY_GURU_DETAIL,
+    siswaAbk: {},
+    kelembagaan: {},
+  }));
+};
 
-    return {
-      id: school.npsn,
-      no: index + 1,
-      noUrut: noUrutStr,
-      noUrutSekolah: `${schoolType}${noUrutStr}`,
-      kecamatan: school.kecamatan,
-      npsn: school.npsn,
-      namaSekolah: school.name,
-      schoolType: schoolType,
-      status: school.type,
-      dataStatus: jumlahSiswa > 0 ? "Aktif" : "Data Belum Lengkap",
-      dataStatusColor:
-        jumlahSiswa > 0
-          ? "bg-green-100 text-green-700"
-          : "bg-yellow-100 text-yellow-700",
-      siswa: {
-        jumlahSiswa: jumlahSiswa,
-        kelas1: { l: parseInt(school.classes?.class_1?._L, 10) || 0, p: parseInt(school.classes?.class_1?._P, 10) || 0 },
-        kelas2: { l: parseInt(school.classes?.class_2?._L, 10) || 0, p: parseInt(school.classes?.class_2?._P, 10) || 0 },
-        kelas3: { l: parseInt(school.classes?.class_3?._L, 10) || 0, p: parseInt(school.classes?.class_3?._P, 10) || 0 },
-        kelas4: { l: parseInt(school.classes?.class_4?._L, 10) || 0, p: parseInt(school.classes?.class_4?._P, 10) || 0 },
-        kelas5: { l: parseInt(school.classes?.class_5?._L, 10) || 0, p: parseInt(school.classes?.class_5?._P, 10) || 0 },
-        kelas6: { l: parseInt(school.classes?.class_6?._L, 10) || 0, p: parseInt(school.classes?.class_6?._P, 10) || 0 },
+const transformPaudData = (schoolData, schoolType) => {
+  const allSchools = Object.entries(schoolData).flatMap(
+    ([kecamatanName, schoolsInKecamatan]) =>
+      schoolsInKecamatan.map((school) => ({
+        ...school,
+        kecamatan: kecamatanName,
+        jenjang: school.type,
+      }))
+  );
+
+  return allSchools.map((school) => ({
+    id: school.npsn,
+    namaSekolah: school.name,
+    npsn: school.npsn,
+    kecamatan: school.kecamatan,
+    status: "SWASTA",
+    schoolType: schoolType,
+    jenjang: school.jenjang,
+    dataStatus:
+      (parseInt(school.student_count, 10) || 0) > 0
+        ? "Aktif"
+        : "Data Belum Lengkap",
+    st_male: parseInt(school.st_male, 10) || 0,
+    st_female: parseInt(school.st_female, 10) || 0,
+    siswa: {
+      jumlahSiswa: parseInt(school.student_count, 10) || 0,
+      ...EMPTY_SISWA_DETAIL,
+    },
+    rombel: school.rombel,
+    prasarana: {
+      ukuran: { tanah: school.building_status?.tanah?.land_available },
+      ruangKelas: {
+        jumlah: school.class_condition?.total_room,
+        baik: school.class_condition?.classrooms_good,
+        rusakSedang: school.class_condition?.classrooms_moderate_damage,
+        rusakBerat: school.class_condition?.classrooms_heavy_damage,
       },
-      rombel: {
-        kelas1: parseInt(school.rombel?.class_1, 10) || 0,
-        kelas2: parseInt(school.rombel?.class_2, 10) || 0,
-        kelas3: parseInt(school.rombel?.class_3, 10) || 0,
-        kelas4: parseInt(school.rombel?.class_4, 10) || 0,
-        kelas5: parseInt(school.rombel?.class_5, 10) || 0,
-        kelas6: parseInt(school.rombel?.class_6, 10) || 0,
+      toiletGuruSiswa: { jumlah: school.toilets?.n_available },
+    },
+    guru: EMPTY_GURU_DETAIL,
+    siswaAbk: {},
+    kelembagaan: {},
+  }));
+};
+
+const transformPkbmData = (schoolData, schoolType) => {
+  const allSchools = Object.entries(schoolData).flatMap(
+    ([kecamatanName, schoolsInKecamatan]) =>
+      schoolsInKecamatan.map((school) => ({
+        ...school,
+        kecamatan: kecamatanName,
+      }))
+  );
+
+  return allSchools.map((school) => ({
+    id: school.npsn,
+    namaSekolah: school.name,
+    npsn: school.npsn,
+    kecamatan: school.kecamatan,
+    status: "SWASTA",
+    schoolType: schoolType,
+    jenjang: schoolType,
+    dataStatus:
+      (parseInt(school.student_count, 10) || 0) > 0
+        ? "Aktif"
+        : "Data Belum Lengkap",
+    st_male: parseInt(school.st_male, 10) || 0,
+    st_female: parseInt(school.st_female, 10) || 0,
+    siswa: {
+      jumlahSiswa: parseInt(school.student_count, 10) || 0,
+      ...EMPTY_SISWA_DETAIL,
+    },
+    guru: EMPTY_GURU_DETAIL,
+    prasarana: { ukuran: {}, ruangKelas: {}, mebeulair: {} },
+    rombel: {},
+    siswaAbk: {},
+    kelembagaan: {},
+  }));
+};
+
+const transformSmpData = (schoolData, schoolType) => {
+  const allSchools = Object.entries(schoolData).flatMap(
+    ([kecamatanName, schoolsInKecamatan]) =>
+      schoolsInKecamatan.map((school) => ({
+        ...school,
+        kecamatan: kecamatanName,
+      }))
+  );
+
+  return allSchools.map((school) => ({
+    id: school.npsn,
+    namaSekolah: school.name,
+    npsn: school.npsn,
+    kecamatan: school.kecamatan,
+    status: school.type,
+    schoolType: schoolType,
+    jenjang: schoolType,
+    dataStatus:
+      (parseInt(school.student_count, 10) || 0) > 0
+        ? "Aktif"
+        : "Data Belum Lengkap",
+    siswa: {
+      jumlahSiswa: parseInt(school.student_count, 10) || 0,
+      ...EMPTY_SISWA_DETAIL,
+    },
+    rombel: {},
+    prasarana: {
+      ruangKelas: {
+        jumlah: school.class_condition?.total_room,
+        baik: school.class_condition?.classrooms_good,
+        rusakSedang: school.class_condition?.classrooms_moderate_damage,
+        rusakBerat: school.class_condition?.classrooms_heavy_damage,
       },
-      prasarana: {
-        ukuran: {
-          tanah: parseInt(school.facilities?.land_area, 10) || 0,
-          bangunan: parseInt(school.facilities?.building_area, 10) || 0,
-          halaman: 0,
-        },
-        ruangKelas: {
-          jumlah: parseInt(school.class_condition?.total, 10) || 0,
-          baik: parseInt(school.class_condition?.good, 10) || 0,
-          rusakRingan: 0,
-          rusakSedang: parseInt(school.class_condition?.moderate_damage, 10) || 0,
-          rusakBerat: parseInt(school.class_condition?.heavy_damage, 10) || 0,
-          rusakTotal: 0, lahan: "N/A", kelebihan: 0, kurangRkb: 0, rkbTambahan: 0,
-        },
-        ruangPerpustakaan: {
-          jumlah: parseInt(school.library?.total, 10) || 0,
-          baik: parseInt(school.library?.good, 10) || 0,
-          rusakSedang: parseInt(school.library?.moderate_damage, 10) || 0,
-          rusakBerat: parseInt(school.library?.heavy_damage, 10) || 0,
-        },
-        ruangLaboratorium: {
-          jumlah: parseInt(school.laboratory?.total, 10) || 0,
-          baik: parseInt(school.laboratory?.good, 10) || 0,
-          rusakSedang: parseInt(school.laboratory?.moderate_damage, 10) || 0,
-          rusakBerat: parseInt(school.laboratory?.heavy_damage, 10) || 0,
-        },
-        gedung: { jumlah: 0 },
-        ruangGuru: { jumlah: 0, baik: 0, rusakSedang: 0, rusakBerat: 0 },
-        ruangUks: { jumlah: 0, baik: 0, rusakSedang: 0, rusakBerat: 0 },
-        toiletGuruSiswa: { jumlah: 0, baik: 0, rusakSedang: 0, rusakBerat: 0 },
-        rumahDinas: { jumlah: 0, baik: 0, rusakSedang: 0, rusakBerat: 0 },
-        mebeulair: { meja: { jumlah: 0, baik: 0, rusak: 0 }, kursi: { jumlah: 0, baik: 0, rusak: 0 }},
-        chromebook: 0,
-      },
-      guru: {
-        jumlahGuru: 0, pns: 0, pppk: 0, pppkParuhWaktu: 0, nonAsnDapodik: 0, nonAsnTidakDapodik: 0, kekuranganGuru: 0,
-      },
-      siswaAbk: {},
-      siswaLanjutDalamKab: {},
-      siswaLanjutLuarKab: {},
-      siswaTidakLanjut: 0,
-      kelembagaan: {},
-      address: school.address,
-      email: "N/A",
-      phone: "N/A",
-      lastUpdated: new Date().toISOString().split("T")[0],
-    };
-  });
-  
-  return { transformedSchools, kecamatanList };
+      ruangPerpustakaan: school.library
+        ? {
+            jumlah: school.library.total_all,
+            baik: school.library.good,
+            rusakSedang: school.library.moderate_damage,
+            rusakBerat: school.library.heavy_damage,
+          }
+        : {},
+      ruangLaboratorium: school.laboratory_ipa,
+      ruangGuru: school.teacher_room,
+    },
+    guru: EMPTY_GURU_DETAIL,
+    siswaAbk: {},
+    kelembagaan: {},
+  }));
 };
 
 export default function SchoolsTable({ operatorType }) {
@@ -146,77 +296,95 @@ export default function SchoolsTable({ operatorType }) {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  
-  // --- PAGINATION STATE ---
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-
   useEffect(() => {
-    const fetchAllData = async () => {
-      if (!operatorType) return;
+    const fetchAndTransformData = async () => {
+      if (!operatorType || !DATA_FILES[operatorType]) {
+        setSchoolsData([]);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
+      const dataUrl = DATA_FILES[operatorType];
 
       try {
-        const [schoolsResponse, kecamatanResponse] = await Promise.all([
-          fetch("/data/sd_new.json").catch(e => { console.error("Gagal fetch sd_new.json:", e); return null; }),
-          fetch("/data/kecamatan.geojson").catch(e => { console.error("Gagal fetch kecamatan.geojson:", e); return null; }),
-        ]);
+        const response = await fetch(dataUrl);
+        if (!response.ok) throw new Error(`Gagal memuat ${dataUrl}`);
+        const rawData = await response.json();
 
-        if (!schoolsResponse || !schoolsResponse.ok) {
-            throw new Error("Gagal memuat data sekolah (sd_new.json).");
+        let transformedSchools = [];
+        let finalFilteredSchools = [];
+
+        switch (operatorType) {
+          case "SD":
+            transformedSchools = transformSdData(rawData, operatorType);
+            break;
+          case "SMP":
+            transformedSchools = transformSmpData(rawData, operatorType);
+            break;
+          case "PAUD":
+          case "TK":
+            transformedSchools = transformPaudData(rawData, operatorType);
+            break;
+          case "PKBM":
+            transformedSchools = transformPkbmData(rawData, operatorType);
+            break;
+          default:
+            transformedSchools = [];
         }
 
-        const schoolsRawData = await schoolsResponse.json();
-        const kecamatanRawData = kecamatanResponse && kecamatanResponse.ok ? await kecamatanResponse.json() : null;
+        if (operatorType === "TK") {
+          finalFilteredSchools = transformedSchools.filter(
+            (school) => school.jenjang === "TK"
+          );
+        } else if (operatorType === "PAUD") {
+          finalFilteredSchools = transformedSchools.filter(
+            (school) => school.jenjang !== "TK"
+          );
+        } else {
+          finalFilteredSchools = transformedSchools;
+        }
 
-        const { transformedSchools, kecamatanList } = transformAndFlattenData(
-          schoolsRawData,
-          kecamatanRawData,
-          operatorType
-        );
-        
-        setSchoolsData(transformedSchools);
-        setKecamatanList(kecamatanList);
-
+        setSchoolsData(finalFilteredSchools);
+        const uniqueKecamatan = [
+          ...new Set(finalFilteredSchools.map((s) => s.kecamatan)),
+        ].sort();
+        setKecamatanList(uniqueKecamatan);
       } catch (error) {
-        console.error(`Error memuat data:`, error);
+        console.error(
+          `Error memuat atau memproses data untuk ${operatorType}:`,
+          error
+        );
         setSchoolsData([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (operatorType === "SD") {
-      fetchAllData();
-    } else {
-      console.warn(`Tipe operator ${operatorType} belum diimplementasikan.`);
-      setSchoolsData([]);
-      setIsLoading(false);
-    }
+    fetchAndTransformData();
   }, [operatorType]);
 
-  // --- FILTERING LOGIC ---
   const filteredSchools = useMemo(() => {
     let filtered = schoolsData;
-
-    if (selectedKecamatan !== 'all') {
-        filtered = filtered.filter(school => school.kecamatan === selectedKecamatan);
+    if (selectedKecamatan !== "all") {
+      filtered = filtered.filter(
+        (school) => school.kecamatan === selectedKecamatan
+      );
     }
-
     if (searchTerm) {
-        const lowercasedSearchTerm = searchTerm.toLowerCase();
-        filtered = filtered.filter(
-            (school) =>
-            school.namaSekolah?.toLowerCase().includes(lowercasedSearchTerm) ||
-            school.npsn?.includes(searchTerm)
-        );
+      const lowercasedSearchTerm = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (school) =>
+          school.namaSekolah?.toLowerCase().includes(lowercasedSearchTerm) ||
+          school.npsn?.includes(searchTerm)
+      );
     }
-    
     return filtered;
   }, [schoolsData, searchTerm, selectedKecamatan]);
 
-  // --- PAGINATION LOGIC ---
   const paginatedSchools = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -225,7 +393,6 @@ export default function SchoolsTable({ operatorType }) {
 
   const totalPages = Math.ceil(filteredSchools.length / itemsPerPage);
 
-  // Reset page to 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedKecamatan, itemsPerPage]);
@@ -261,14 +428,19 @@ export default function SchoolsTable({ operatorType }) {
               {getTableTitle()}
             </CardTitle>
             <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-               <Select value={selectedKecamatan} onValueChange={setSelectedKecamatan}>
+              <Select
+                value={selectedKecamatan}
+                onValueChange={setSelectedKecamatan}
+              >
                 <SelectTrigger className="w-full sm:w-[200px] rounded-lg bg-background">
                   <SelectValue placeholder="Semua Kecamatan" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua Kecamatan</SelectItem>
-                  {kecamatanList.map(kec => (
-                    <SelectItem key={kec} value={kec}>{kec}</SelectItem>
+                  {kecamatanList.map((kec) => (
+                    <SelectItem key={kec} value={kec}>
+                      {kec}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -294,7 +466,7 @@ export default function SchoolsTable({ operatorType }) {
             <div className="text-center py-20 text-muted-foreground">
               <School className="h-16 w-16 mx-auto mb-4 opacity-50" />
               <p className="font-semibold mb-1">
-                {searchTerm || selectedKecamatan !== 'all'
+                {searchTerm || selectedKecamatan !== "all"
                   ? "Tidak ada hasil yang cocok"
                   : `Data ${operatorType} tidak ditemukan`}
               </p>
@@ -312,26 +484,35 @@ export default function SchoolsTable({ operatorType }) {
                     <TableHead>NPSN</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-center">Jumlah Siswa</TableHead>
-                    <TableHead className="w-32 pr-6 text-center">Aksi</TableHead>
+                    <TableHead className="w-32 pr-6 text-center">
+                      Aksi
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedSchools.map((school, index) => (
-                    <TableRow key={school.id} className="hover:bg-muted/50 even:bg-muted/20">
+                    <TableRow
+                      key={school.id}
+                      className="hover:bg-muted/50 even:bg-muted/20"
+                    >
                       <TableCell className="font-medium pl-6">
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </TableCell>
                       <TableCell className="font-medium">
                         <div>{school.namaSekolah}</div>
-                        <div className="text-xs text-muted-foreground">{school.kecamatan}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {school.kecamatan}
+                        </div>
                       </TableCell>
-                      <TableCell className="font-mono text-sm">{school.npsn}</TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {school.npsn}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
                           className="font-normal capitalize"
                         >
-                          {school.status}
+                          {school.status.toLowerCase()}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center font-medium">
@@ -339,10 +520,22 @@ export default function SchoolsTable({ operatorType }) {
                       </TableCell>
                       <TableCell className="pr-6">
                         <div className="flex gap-1 justify-center">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => handleViewDetails(school)} title="Lihat Detail">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full"
+                            onClick={() => handleViewDetails(school)}
+                            title="Lihat Detail"
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => handleEditSchool(school)} title="Edit Data">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full"
+                            onClick={() => handleEditSchool(school)}
+                            title="Edit Data"
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                         </div>
@@ -355,61 +548,80 @@ export default function SchoolsTable({ operatorType }) {
           )}
         </CardContent>
 
-        {/* --- PAGINATION CONTROLS --- */}
         {totalPages > 1 && (
-            <div className="flex items-center justify-between p-4 border-t border-border/60">
-                <div className="text-sm text-muted-foreground">
-                    Menampilkan <strong>{paginatedSchools.length}</strong> dari <strong>{filteredSchools.length}</strong> data
-                </div>
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm">Baris per halaman:</span>
-                        <Select
-                            value={`${itemsPerPage}`}
-                            onValueChange={(value) => {
-                                setItemsPerPage(Number(value));
-                            }}
-                        >
-                            <SelectTrigger className="h-8 w-[70px] bg-background">
-                                <SelectValue placeholder={itemsPerPage} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {[10, 25, 50, 100].map((pageSize) => (
-                                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                                        {pageSize}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="text-sm font-medium">
-                        Halaman {currentPage} dari {totalPages}
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Button variant="outline" className="h-8 w-8 p-0" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
-                            <ChevronsLeft className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" className="h-8 w-8 p-0" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" className="h-8 w-8 p-0" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages}>
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" className="h-8 w-8 p-0" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
-                            <ChevronsRight className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
+          <div className="flex items-center justify-between p-4 border-t border-border/60">
+            <div className="text-sm text-muted-foreground">
+              Menampilkan <strong>{paginatedSchools.length}</strong> dari{" "}
+              <strong>{filteredSchools.length}</strong> data
             </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">Baris per halaman:</span>
+                <Select
+                  value={`${itemsPerPage}`}
+                  onValueChange={(value) => {
+                    setItemsPerPage(Number(value));
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[70px] bg-background">
+                    <SelectValue placeholder={itemsPerPage} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10, 25, 50, 100].map((pageSize) => (
+                      <SelectItem key={pageSize} value={`${pageSize}`}>
+                        {pageSize}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="text-sm font-medium">
+                Halaman {currentPage} dari {totalPages}
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
-
       </Card>
 
       <div className="mt-6 flex justify-end">
-          <Button className="rounded-lg">
-            <Plus className="h-4 w-4 mr-2" />
-            Tambah Data Sekolah
-          </Button>
+        <Button className="rounded-lg">
+          <Plus className="h-4 w-4 mr-2" />
+          Tambah Data Sekolah
+        </Button>
       </div>
 
       <SchoolDetailsModal
@@ -432,4 +644,3 @@ export default function SchoolsTable({ operatorType }) {
     </>
   );
 }
-
