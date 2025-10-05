@@ -2,6 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Badge } from "./ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import {
   School,
   MapPin,
@@ -12,22 +13,89 @@ import {
   UserCheck,
   ClipboardList,
   UserPlus,
-  BookOpen,
+  TrendingUp,
+  Armchair,
+  Laptop,
+  Layers,
+  FlaskConical,
+  Computer,
+  Languages,
+  Library,
+  Briefcase,
+  PersonStanding,
+  HeartPulse,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-// Helper Konstanta
+// --- KONSTANTA UNTUK SEMUA JENJANG ---
 const PAUD_ROMBEL_TYPES = [
   { key: "tka", label: "TK A" },
   { key: "tkb", label: "TK B" },
   { key: "kb", label: "Kelompok Bermain (KB)" },
   { key: "sps_tpa", label: "SPS / TPA" },
 ];
-const PKBM_PAKETS = [
-  { key: "paketA", label: "Paket A (Setara SD)" },
-  { key: "paketB", label: "Paket B (Setara SMP)" },
-  { key: "paketC", label: "Paket C (Setara SMA)" },
-];
+
+const PKBM_PAKETS = {
+  A: { name: "Paket A (Setara SD)", grades: [1, 2, 3, 4, 5, 6] },
+  B: { name: "Paket B (Setara SMP)", grades: [7, 8, 9] },
+  C: { name: "Paket C (Setara SMA)", grades: [10, 11, 12] },
+};
+
+const LANJUT_OPTIONS = {
+  SD: {
+    dalamKab: [
+      { key: "smp", label: "SMP" },
+      { key: "mts", label: "MTs" },
+      { key: "pontren", label: "Pontren" },
+      { key: "pkbm", label: "PKBM" },
+    ],
+    luarKab: [
+      { key: "smp", label: "SMP" },
+      { key: "mts", label: "MTs" },
+      { key: "pontren", label: "Pontren" },
+      { key: "pkbm", label: "PKBM" },
+    ],
+  },
+  SMP: {
+    dalamKab: [
+      { key: "sma", label: "SMA" },
+      { key: "smk", label: "SMK" },
+      { key: "ma", label: "MA" },
+      { key: "pontren", label: "Pontren" },
+      { key: "pkbm", label: "PKBM" },
+    ],
+    luarKab: [
+      { key: "sma", label: "SMA" },
+      { key: "smk", label: "SMK" },
+      { key: "ma", label: "MA" },
+      { key: "pontren", label: "Pontren" },
+      { key: "pkbm", label: "PKBM" },
+    ],
+  },
+  PAUD: {
+    dalamKab: [
+      { key: "sd", label: "SD" },
+      { key: "mi", label: "MI" },
+    ],
+    luarKab: [
+      { key: "sd", label: "SD" },
+      { key: "mi", label: "MI" },
+    ],
+  },
+  PKBM: {
+    paketB: [
+      { key: "sma", label: "SMA" },
+      { key: "smk", label: "SMK" },
+      { key: "ma", label: "MA" },
+      { key: "paketC", label: "Lanjut Paket C" },
+    ],
+    paketC: [
+      { key: "pt", label: "Perguruan Tinggi" },
+      { key: "bekerja", label: "Bekerja" },
+    ],
+  },
+};
+LANJUT_OPTIONS.TK = LANJUT_OPTIONS.PAUD; // Alias
 
 export function SchoolDetailsModal({ school, isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState("basic");
@@ -42,6 +110,12 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
     return null;
   }
 
+  const schoolType = school.schoolType || school.jenjang;
+  const isSd = schoolType === "SD";
+  const isSmp = schoolType === "SMP";
+  const isPaud = schoolType === "PAUD" || schoolType === "TK";
+  const isPkbm = schoolType === "PKBM";
+
   const getStatusColor = (status) => {
     switch (status) {
       case "Aktif":
@@ -53,45 +127,73 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
     }
   };
 
-  const getTotalAbk = () => {
-    if (!school.siswaAbk) return 0;
-    return Object.values(school.siswaAbk).reduce(
-      (total, kelas) => total + (Number(kelas.l) || 0) + (Number(kelas.p) || 0),
-      0
-    );
+  const sumNestedObject = (obj) => {
+    if (!obj) return 0;
+    return Object.values(obj).reduce((total, value) => {
+      if (typeof value === "object" && value !== null) {
+        if ("l" in value && "p" in value) {
+          return total + (Number(value.l) || 0) + (Number(value.p) || 0);
+        }
+        return total + sumNestedObject(value);
+      }
+      return total + (Number(value) || 0);
+    }, 0);
   };
 
+  const getTotalAbk = () => sumNestedObject(school.siswaAbk);
+
   const getTotalFacilities = () => {
-    const prasarana = school.prasarana || {};
     let total = 0;
-    total +=
-      Number(prasarana.ruangKelas?.jumlah) ||
-      Number(prasarana.ruangKelas?.total_room) ||
-      0;
-    total +=
-      Number(prasarana.ruangPerpustakaan?.jumlah) ||
-      Number(prasarana.ruangPerpustakaan?.total_all) ||
-      0;
-    total +=
-      Number(prasarana.ruangLaboratorium?.jumlah) ||
-      Number(prasarana.ruangLaboratorium?.total_all) ||
-      0;
-    total +=
-      Number(prasarana.ruangGuru?.jumlah) ||
-      Number(prasarana.ruangGuru?.total_all) ||
-      0;
-    total +=
-      Number(prasarana.ruangUks?.jumlah) ||
-      Number(prasarana.ruangUks?.total_all) ||
-      0;
-    total +=
-      Number(prasarana.toiletGuruSiswa?.jumlah) ||
-      Number(prasarana.toiletGuruSiswa?.total_all) ||
-      0;
-    total +=
-      Number(prasarana.rumahDinas?.jumlah) ||
-      Number(prasarana.rumahDinas?.total_all) ||
-      0;
+    const prasarana = school.prasarana || {};
+
+    if (isSmp) {
+      const facilities = [
+        school.class_condition,
+        school.library,
+        school.laboratory_comp,
+        school.laboratory_langua,
+        school.laboratory_ipa,
+        school.laboratory_fisika,
+        school.laboratory_biologi,
+        school.kepsek_room,
+        school.teacher_room,
+        school.administration_room,
+        school.uks_room,
+        school.teachers_toilet,
+        school.students_toilet,
+      ];
+      facilities.forEach((facility) => {
+        if (facility) {
+          if (typeof facility.total_room !== "undefined")
+            total += Number(facility.total_room);
+          if (typeof facility.total_all !== "undefined")
+            total += Number(facility.total_all);
+          if (facility.male && facility.female) {
+            total +=
+              (Number(facility.male.total_all) || 0) +
+              (Number(facility.female.total_all) || 0);
+          }
+        }
+      });
+    } else {
+      const facilities = [
+        prasarana.classrooms,
+        prasarana.ruangKelas,
+        prasarana.ruangPerpustakaan,
+        prasarana.ruangLaboratorium,
+        prasarana.ruangGuru,
+        prasarana.ruangUks,
+        prasarana.toiletGuruSiswa,
+        prasarana.rumahDinas,
+        prasarana.gedung,
+      ];
+      facilities.forEach((facility) => {
+        if (facility) {
+          const jumlah = facility.total || facility.jumlah || 0;
+          total += Number(jumlah);
+        }
+      });
+    }
     return total;
   };
 
@@ -105,6 +207,11 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
       id: "students",
       label: "Data Siswa",
       icon: <Users className="h-4 w-4" />,
+    },
+    {
+      id: "graduation",
+      label: "Siswa Lanjut",
+      icon: <TrendingUp className="h-4 w-4" />,
     },
     {
       id: "teachers",
@@ -129,7 +236,7 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
         <div className="flex items-start justify-between mb-4">
           <div>
             <h3 className="text-xl font-semibold text-card-foreground mb-1">
-              {school.namaSekolah}
+              {school.name || school.namaSekolah}
             </h3>
             <p className="text-primary font-mono text-sm">{school.npsn}</p>
           </div>
@@ -147,7 +254,7 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
           <div className="flex items-center gap-2">
             <Building className="h-4 w-4 text-muted-foreground" />
             <span>
-              {school.jenjang || school.schoolType} - {school.status}
+              {schoolType} - {school.type || school.status}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -165,7 +272,7 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
           <div className="bg-blue-50 rounded-lg p-4 text-center">
             <Users className="h-6 w-6 text-blue-600 mx-auto mb-2" />
             <p className="text-2xl font-bold text-blue-600">
-              {school.siswa?.jumlahSiswa || 0}
+              {school.student_count || school.siswa?.jumlahSiswa || 0}
             </p>
             <p className="text-xs text-blue-600">Total Siswa</p>
           </div>
@@ -196,32 +303,21 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
   );
 
   const renderStudentsInfo = () => {
-    const isSd = school.schoolType === "SD";
-    const isSmp = school.schoolType === "SMP";
-    const isPaud = school.schoolType === "PAUD" || school.schoolType === "TK";
-    const isPkbm = school.schoolType === "PKBM";
-
-    const renderHeader = (isSimpleView) => (
+    const renderHeader = () => (
       <thead className="bg-gray-50">
         <tr>
           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-            {isSimpleView ? "Kelompok Belajar" : "Kelas / Paket"}
+            Kelas / Kelompok
           </th>
-          {!isSimpleView && (
-            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-              Laki-laki
-            </th>
-          )}
-          {!isSimpleView && (
-            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-              Perempuan
-            </th>
-          )}
-          {!isSimpleView && (
-            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-              Total
-            </th>
-          )}
+          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+            Laki-laki
+          </th>
+          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+            Perempuan
+          </th>
+          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+            Total
+          </th>
           <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
             Rombel
           </th>
@@ -229,139 +325,199 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
       </thead>
     );
 
-    const renderRow = (label, data, rombel) => {
-      if (!data) return null;
-      const total = (data.l || 0) + (data.p || 0);
-      if (total === 0 && (rombel === 0 || rombel === "")) return null;
+    const renderRow = (label, siswaData, rombelData, abkData) => {
+      const siswa = siswaData || { l: 0, p: 0 };
+      const totalSiswa = (Number(siswa.l) || 0) + (Number(siswa.p) || 0);
+      const rombel = rombelData || 0;
+      const abk = abkData || { l: 0, p: 0 };
+      const totalAbk = (Number(abk.l) || 0) + (Number(abk.p) || 0);
+
       return (
         <tr key={label}>
           <td className="px-4 py-3 text-sm font-medium text-gray-900">
             {label}
+            {totalAbk > 0 && (
+              <p className="text-xs text-orange-600 font-normal">
+                {totalAbk} Siswa ABK
+              </p>
+            )}
           </td>
-          <td className="px-4 py-3 text-sm text-center">{data.l || 0}</td>
-          <td className="px-4 py-3 text-sm text-center">{data.p || 0}</td>
-          <td className="px-4 py-3 text-sm text-center font-medium">{total}</td>
+          <td className="px-4 py-3 text-sm text-center">{siswa.l || 0}</td>
+          <td className="px-4 py-3 text-sm text-center">{siswa.p || 0}</td>
+          <td className="px-4 py-3 text-sm text-center font-medium">
+            {totalSiswa}
+          </td>
           <td className="px-4 py-3 text-sm text-center">{rombel || 0}</td>
         </tr>
       );
     };
 
-    const renderSimpleRow = (label, rombelCount) => {
-      if (!rombelCount) return null;
+    const renderStudentTable = (title, items, getRowData) => (
+      <div>
+        <h4 className="text-card-foreground mb-3 flex items-center gap-2">
+          <Users className="h-4 w-4" /> {title}
+        </h4>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 border rounded-lg">
+            {renderHeader()}
+            <tbody className="bg-white divide-y divide-gray-200">
+              {items.map((item) => getRowData(item))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+
+    if (isSd)
+      return renderStudentTable("Siswa per Kelas", [1, 2, 3, 4, 5, 6], (k) =>
+        renderRow(
+          `Kelas ${k}`,
+          school.siswa?.[`kelas${k}`],
+          school.rombel?.[`kelas${k}`],
+          school.siswaAbk?.[`kelas${k}`]
+        )
+      );
+    if (isSmp)
+      return renderStudentTable("Siswa per Kelas", [7, 8, 9], (k) =>
+        renderRow(
+          `Kelas ${k}`,
+          school.siswa?.[`kelas${k}`],
+          school.rombel?.[`kelas${k}`],
+          school.siswaAbk?.[`kelas${k}`]
+        )
+      );
+    if (isPaud)
+      return renderStudentTable(
+        "Siswa per Kelompok",
+        PAUD_ROMBEL_TYPES,
+        (type) =>
+          renderRow(
+            type.label,
+            school.siswa?.[type.key],
+            school.rombel?.[type.key],
+            school.siswaAbk?.[type.key]
+          )
+      );
+    if (isPkbm) {
       return (
-        <tr key={label}>
-          <td className="px-4 py-3 text-sm font-medium">{label}</td>
-          <td className="px-4 py-3 text-sm text-center font-bold">
-            {rombelCount}
-          </td>
-        </tr>
+        <div>
+          <h4 className="text-card-foreground mb-3 flex items-center gap-2">
+            <Users className="h-4 w-4" /> Siswa per Paket
+          </h4>
+          <Tabs defaultValue="A" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="A">{PKBM_PAKETS.A.name}</TabsTrigger>
+              <TabsTrigger value="B">{PKBM_PAKETS.B.name}</TabsTrigger>
+              <TabsTrigger value="C">{PKBM_PAKETS.C.name}</TabsTrigger>
+            </TabsList>
+            {Object.entries(PKBM_PAKETS).map(([key, paket]) => (
+              <TabsContent key={key} value={key}>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 border rounded-lg">
+                    {renderHeader()}
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {paket.grades.map((k) =>
+                        renderRow(
+                          `Kelas ${k}`,
+                          school.siswa?.[`paket${key}`]?.[`kelas${k}`],
+                          school.rombel?.[`paket${key}`]?.[`kelas${k}`],
+                          school.siswaAbk?.[`paket${key}`]?.[`kelas${k}`]
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      );
+    }
+    return (
+      <p className="text-muted-foreground">
+        Tampilan data siswa untuk jenjang ini tidak tersedia.
+      </p>
+    );
+  };
+
+  const renderGraduationInfo = () => {
+    const options = LANJUT_OPTIONS[schoolType];
+    if (!options)
+      return (
+        <p className="text-muted-foreground">
+          Data kelanjutan siswa tidak berlaku untuk jenjang ini.
+        </p>
+      );
+
+    const renderDataTable = (title, data, optionList) => {
+      if (!optionList) return null;
+      return (
+        <div>
+          <h4 className="text-card-foreground mb-3 font-medium">{title}</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {optionList.map((opt) => {
+              const value = data?.[opt.key] || 0;
+              return (
+                <div
+                  key={opt.key}
+                  className="bg-gray-50 border rounded-lg p-4 text-center"
+                >
+                  <p className="text-2xl font-bold text-gray-800">{value}</p>
+                  <p className="text-xs text-gray-600">{opt.label}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       );
     };
 
-    if (isPaud || isPkbm || isSmp) {
+    if (isPkbm) {
       return (
         <div className="space-y-6">
-          <div>
-            <h4 className="text-card-foreground mb-3 flex items-center gap-2">
-              <Users className="h-4 w-4" /> Total Siswa Keseluruhan
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-                <p className="text-2xl font-bold text-blue-800">
-                  {school.siswa?.jumlahSiswa || 0}
-                </p>
-                <p className="text-xs text-blue-700">Total Siswa</p>
-              </div>
-              <div className="bg-gray-50 border rounded-lg p-4 text-center">
-                <p className="text-2xl font-bold text-gray-800">
-                  {school.st_male || 0}
-                </p>
-                <p className="text-xs text-gray-600">Laki-laki</p>
-              </div>
-              <div className="bg-gray-50 border rounded-lg p-4 text-center">
-                <p className="text-2xl font-bold text-gray-800">
-                  {school.st_female || 0}
-                </p>
-                <p className="text-xs text-gray-600">Perempuan</p>
-              </div>
-            </div>
-          </div>
-          {isPaud && (
-            <div>
-              <h4 className="text-card-foreground mb-3 flex items-center gap-2">
-                <BookOpen className="h-4 w-4" /> Rincian Rombongan Belajar
-                (Rombel)
-              </h4>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 border rounded-lg">
-                  {renderHeader(true)}
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {PAUD_ROMBEL_TYPES.map((type) =>
-                      renderSimpleRow(type.label, school.rombel?.[type.key])
-                    )}
-                  </tbody>
-                </table>
-                <p className="text-xs text-muted-foreground mt-2">
-                  * Data L/P per kelompok belajar tidak tersedia di file sumber.
-                </p>
-              </div>
-            </div>
+          {renderDataTable(
+            "Kelanjutan Lulusan Paket B",
+            school.lulusanPaketB,
+            options.paketB
           )}
-          {(isPkbm || isSmp) && (
-            <div className="text-center text-muted-foreground p-4 border rounded-lg bg-gray-50">
-              <p>
-                Data rincian siswa per kelas/paket tidak tersedia di file
-                sumber.
-              </p>
-            </div>
+          {renderDataTable(
+            "Kelanjutan Lulusan Paket C",
+            school.lulusanPaketC,
+            options.paketC
           )}
         </div>
       );
     }
 
-    // Tampilan default untuk SD
     return (
       <div className="space-y-6">
+        {renderDataTable(
+          "Melanjutkan Dalam Kabupaten",
+          school.siswaLanjutDalamKab,
+          options.dalamKab
+        )}
+        {renderDataTable(
+          "Melanjutkan Luar Kabupaten",
+          school.siswaLanjutLuarKab,
+          options.luarKab
+        )}
         <div>
-          <h4 className="text-card-foreground mb-3 flex items-center gap-2">
-            <Users className="h-4 w-4" /> Siswa per Kelas
+          <h4 className="text-card-foreground mb-3 font-medium">
+            Tidak Melanjutkan / Bekerja
           </h4>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 border rounded-lg">
-              {renderHeader(false)}
-              <tbody className="bg-white divide-y divide-gray-200">
-                {isSd &&
-                  [1, 2, 3, 4, 5, 6].map((kelas) => {
-                    const kelasKey = `kelas${kelas}`;
-                    const siswaData = school.siswa?.[kelasKey];
-                    const rombelData = school.rombel?.[kelasKey];
-                    const totalSiswaKelas =
-                      (siswaData?.l || 0) + (siswaData?.p || 0);
-                    if (
-                      totalSiswaKelas === 0 &&
-                      (rombelData === 0 || !rombelData)
-                    )
-                      return null;
-                    return (
-                      <tr key={kelasKey}>
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{`Kelas ${kelas}`}</td>
-                        <td className="px-4 py-3 text-sm text-center">
-                          {siswaData?.l || 0}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-center">
-                          {siswaData?.p || 0}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-center font-medium">
-                          {totalSiswaKelas}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-center">
-                          {rombelData || 0}
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-red-700">
+                {school.siswaTidakLanjut || 0}
+              </p>
+              <p className="text-xs text-red-600">Tidak Melanjutkan</p>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-green-700">
+                {school.siswaBekerja || 0}
+              </p>
+              <p className="text-xs text-green-600">Bekerja</p>
+            </div>
           </div>
         </div>
       </div>
@@ -377,7 +533,11 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
       { label: "PPPK Paruh Waktu", value: guru.pppkParuhWaktu },
       { label: "Non ASN (Dapodik)", value: guru.nonAsnDapodik },
       { label: "Non ASN (Non-Dapodik)", value: guru.nonAsnTidakDapodik },
-      { label: "Kekurangan Guru", value: guru.kekuranganGuru, highlight: true },
+      {
+        label: "Kekurangan Guru",
+        value: guru.kekuranganGuru,
+        highlight: true,
+      },
     ];
     return (
       <div>
@@ -389,15 +549,19 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
             <div
               key={item.label}
               className={`bg-card border p-4 rounded-lg text-center ${
-                item.highlight ? "bg-red-50 border-red-200" : ""
+                item.highlight && (item.value || 0) > 0
+                  ? "bg-red-50 border-red-200"
+                  : ""
               }`}
             >
               <p
                 className={`text-2xl font-bold ${
-                  item.highlight ? "text-red-600" : "text-card-foreground"
+                  item.highlight && (item.value || 0) > 0
+                    ? "text-red-600"
+                    : "text-card-foreground"
                 }`}
               >
-                {item.value || 0}
+                {item.value ?? 0}
               </p>
               <p className="text-xs text-muted-foreground">{item.label}</p>
             </div>
@@ -408,48 +572,454 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
   };
 
   const renderFacilitiesInfo = () => {
+    // Component helper untuk card ruangan
+    const RoomCard = ({ item }) => {
+      const data = item.data || {};
+      const total =
+        data.total_all || data.total_room || data.total || data.jumlah || 0;
+      const good = data.good || data.baik || 0;
+      const moderate_damage = data.moderate_damage || data.rusakSedang || 0;
+      const heavy_damage = data.heavy_damage || data.rusakBerat || 0;
+
+      return (
+        <div className="bg-gray-50 border p-3 rounded-lg flex items-start gap-4">
+          <div>{item.icon}</div>
+          <div className="flex-1">
+            <h5 className="font-semibold text-sm mb-1">{item.title}</h5>
+            <div className="text-xs space-y-1 text-gray-600">
+              <p>
+                Total:{" "}
+                <span className="font-medium text-gray-800">{total}</span>
+              </p>
+              {good > 0 || total > 0 ? (
+                <>
+                  <p>
+                    Baik:{" "}
+                    <span className="font-medium text-green-700">{good}</span>
+                  </p>
+                  <p>
+                    Rusak Sedang:{" "}
+                    <span className="font-medium text-yellow-700">
+                      {moderate_damage}
+                    </span>
+                  </p>
+                  <p>
+                    Rusak Berat:{" "}
+                    <span className="font-medium text-red-700">
+                      {heavy_damage}
+                    </span>
+                  </p>
+                </>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    if (isSmp) {
+      const prasarana = school;
+
+      const labs = [
+        {
+          title: "Lab. Komputer",
+          data: prasarana.laboratory_comp,
+          icon: <Computer className="h-5 w-5 text-blue-600" />,
+        },
+        {
+          title: "Lab. Bahasa",
+          data: prasarana.laboratory_langua,
+          icon: <Languages className="h-5 w-5 text-green-600" />,
+        },
+        {
+          title: "Lab. IPA",
+          data: prasarana.laboratory_ipa,
+          icon: <FlaskConical className="h-5 w-5 text-purple-600" />,
+        },
+        {
+          title: "Lab. Fisika",
+          data: prasarana.laboratory_fisika,
+          icon: <FlaskConical className="h-5 w-5 text-indigo-600" />,
+        },
+        {
+          title: "Lab. Biologi",
+          data: prasarana.laboratory_biologi,
+          icon: <FlaskConical className="h-5 w-5 text-teal-600" />,
+        },
+      ].filter((lab) => lab.data && (lab.data.total_all || lab.data.jumlah));
+
+      const supportRooms = [
+        {
+          title: "Perpustakaan",
+          data: prasarana.library,
+          icon: <Library className="h-5 w-5 text-orange-600" />,
+        },
+        {
+          title: "Ruang Kepsek",
+          data: prasarana.kepsek_room,
+          icon: <PersonStanding className="h-5 w-5 text-gray-600" />,
+        },
+        {
+          title: "Ruang Guru",
+          data: prasarana.teacher_room,
+          icon: <Users className="h-5 w-5 text-cyan-600" />,
+        },
+        {
+          title: "Ruang TU",
+          data: prasarana.administration_room,
+          icon: <Briefcase className="h-5 w-5 text-pink-600" />,
+        },
+        {
+          title: "UKS",
+          data: prasarana.uks_room,
+          icon: <HeartPulse className="h-5 w-5 text-red-600" />,
+        },
+        {
+          title: "Rumah Dinas",
+          data: prasarana.official_residences || prasarana.rumahDinas,
+          icon: <Building className="h-5 w-5 text-gray-600" />,
+        },
+      ].filter(
+        (room) => room.data && (room.data.total_all || room.data.jumlah)
+      );
+
+      const furniture =
+        prasarana.furniture_computer || prasarana.mebeulair || {};
+
+      const classCondition =
+        prasarana.class_condition || prasarana.ruangKelas || {};
+      const classTotal =
+        classCondition.total_room || classCondition.jumlah || 0;
+      const classGood =
+        classCondition.classrooms_good || classCondition.baik || 0;
+      const classModerate =
+        classCondition.classrooms_moderate_damage ||
+        classCondition.rusakSedang ||
+        0;
+      const classHeavy =
+        classCondition.classrooms_heavy_damage ||
+        classCondition.rusakBerat ||
+        0;
+
+      const hasToilets = prasarana.teachers_toilet || prasarana.students_toilet;
+
+      return (
+        <div className="space-y-6">
+          {classTotal > 0 && (
+            <div>
+              <h4 className="text-card-foreground mb-3">Kondisi Ruang Kelas</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-gray-50 border rounded-lg p-4 text-center">
+                  <p className="text-2xl font-bold text-gray-800">
+                    {classTotal}
+                  </p>
+                  <p className="text-xs text-gray-600">Total Ruang</p>
+                </div>
+                <div className="bg-green-50 border-green-200 border rounded-lg p-4 text-center">
+                  <p className="text-2xl font-bold text-green-700">
+                    {classGood}
+                  </p>
+                  <p className="text-xs text-green-600">Kondisi Baik</p>
+                </div>
+                <div className="bg-yellow-50 border-yellow-200 border rounded-lg p-4 text-center">
+                  <p className="text-2xl font-bold text-yellow-700">
+                    {classModerate}
+                  </p>
+                  <p className="text-xs text-yellow-600">Rusak Sedang</p>
+                </div>
+                <div className="bg-red-50 border-red-200 border rounded-lg p-4 text-center">
+                  <p className="text-2xl font-bold text-red-700">
+                    {classHeavy}
+                  </p>
+                  <p className="text-xs text-red-600">Rusak Berat</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {labs.length > 0 && (
+            <div>
+              <h4 className="text-card-foreground mb-3">Laboratorium</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {labs.map((lab) => (
+                  <RoomCard key={lab.title} item={lab} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {supportRooms.length > 0 && (
+            <div>
+              <h4 className="text-card-foreground mb-3">
+                Ruangan Penunjang Lainnya
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {supportRooms.map((room) => (
+                  <RoomCard key={room.title} item={room} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hasToilets && (
+            <div>
+              <h4 className="text-card-foreground mb-3">Rincian Toilet</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <RoomCard
+                  item={{
+                    title: "Toilet Guru (Pria)",
+                    data: prasarana.teachers_toilet?.male,
+                    icon: <Users className="h-5 w-5" />,
+                  }}
+                />
+                <RoomCard
+                  item={{
+                    title: "Toilet Guru (Wanita)",
+                    data: prasarana.teachers_toilet?.female,
+                    icon: <Users className="h-5 w-5" />,
+                  }}
+                />
+                <RoomCard
+                  item={{
+                    title: "Toilet Siswa (Pria)",
+                    data: prasarana.students_toilet?.male,
+                    icon: <Users className="h-5 w-5" />,
+                  }}
+                />
+                <RoomCard
+                  item={{
+                    title: "Toilet Siswa (Wanita)",
+                    data: prasarana.students_toilet?.female,
+                    icon: <Users className="h-5 w-5" />,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-card-foreground mb-3 flex items-center gap-2">
+                <Armchair className="h-4 w-4" /> Mebeulair
+              </h4>
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-4 border">
+                  <p className="font-semibold text-sm mb-2">Meja</p>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <p className="font-bold text-lg">
+                        {furniture.tables || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Jumlah</p>
+                    </div>
+                    <div>
+                      <p className="font-bold text-lg text-green-600">
+                        {furniture.good || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Baik</p>
+                    </div>
+                    <div>
+                      <p className="font-bold text-lg text-red-600">
+                        {(furniture.moderate_damage || 0) +
+                          (furniture.heavy_damage || 0)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Rusak</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4 border">
+                  <p className="font-semibold text-sm mb-2">Kursi</p>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <p className="font-bold text-lg">
+                        {furniture.chairs || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Jumlah</p>
+                    </div>
+                    <div>
+                      <p className="font-bold text-lg text-green-600">
+                        {furniture.good || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Baik</p>
+                    </div>
+                    <div>
+                      <p className="font-bold text-lg text-red-600">
+                        {(furniture.moderate_damage || 0) +
+                          (furniture.heavy_damage || 0)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Rusak</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-card-foreground mb-3 flex items-center gap-2">
+                <Laptop className="h-4 w-4" /> Lainnya
+              </h4>
+              <div className="bg-gray-50 rounded-lg p-4 border h-full flex flex-col justify-center">
+                <p className="text-2xl font-bold text-center">
+                  {furniture.computer || 0}
+                </p>
+                <p className="text-sm text-muted-foreground text-center mt-1">
+                  Jumlah Komputer
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Tampilan Prasarana untuk PAUD / PKBM (Fallback)
     const prasarana = school.prasarana || {};
-    const ruangan = [
-      { title: "Ruang Kelas", data: prasarana.ruangKelas },
-      { title: "Perpustakaan", data: prasarana.ruangPerpustakaan },
-      { title: "Laboratorium", data: prasarana.ruangLaboratorium },
-      { title: "Ruang Guru", data: prasarana.ruangGuru },
-      { title: "UKS", data: prasarana.ruangUks },
-      { title: "Toilet", data: prasarana.toiletGuruSiswa },
-      { title: "Rumah Dinas", data: prasarana.rumahDinas },
+    const ruangKelas = prasarana.classrooms || prasarana.ruangKelas || {};
+    const ruanganLainnya = [
+      {
+        title: "Perpustakaan",
+        data: prasarana.library || prasarana.ruangPerpustakaan,
+      },
+      {
+        title: "Laboratorium",
+        data: prasarana.laboratory || prasarana.ruangLaboratorium,
+      },
+      {
+        title: "Ruang Guru",
+        data: prasarana.teacher_room || prasarana.ruangGuru,
+      },
+      { title: "UKS", data: prasarana.uks_room || prasarana.ruangUks },
+      {
+        title: "Toilet",
+        data: prasarana.toilets || prasarana.toiletGuruSiswa,
+      },
+      {
+        title: "Rumah Dinas",
+        data: prasarana.official_residences || prasarana.rumahDinas,
+      },
     ];
+    const mejaData =
+      prasarana.furniture?.tables || prasarana.mebeulair?.meja || {};
+    const kursiData =
+      prasarana.furniture?.chairs || prasarana.mebeulair?.kursi || {};
+
     return (
       <div className="space-y-6">
-        <div>
-          <h4 className="text-card-foreground mb-3">Luas Area</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4 text-center border">
-              <p className="text-xl font-bold text-gray-800">
-                {prasarana.ukuran?.tanah || 0}
-                <span className="text-sm font-normal"> m²</span>
-              </p>
-              <p className="text-xs text-gray-500">Luas Tanah</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 text-center border">
-              <p className="text-xl font-bold text-gray-800">
-                {prasarana.ukuran?.bangunan || 0}
-                <span className="text-sm font-normal"> m²</span>
-              </p>
-              <p className="text-xs text-gray-500">Luas Bangunan</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 text-center border">
-              <p className="text-xl font-bold text-gray-800">
-                {prasarana.ukuran?.halaman || 0}
-                <span className="text-sm font-normal"> m²</span>
-              </p>
-              <p className="text-xs text-gray-500">Luas Halaman</p>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-gray-50 rounded-lg p-4 text-center border">
+            <p className="text-xl font-bold text-gray-800">
+              {prasarana.ukuran?.tanah || 0}
+              <span className="text-sm font-normal"> m²</span>
+            </p>
+            <p className="text-xs text-gray-500">Luas Tanah</p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center border">
+            <p className="text-xl font-bold text-gray-800">
+              {prasarana.ukuran?.bangunan || 0}
+              <span className="text-sm font-normal"> m²</span>
+            </p>
+            <p className="text-xs text-gray-500">Luas Bangunan</p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center border">
+            <p className="text-xl font-bold text-gray-800">
+              {prasarana.ukuran?.halaman || 0}
+              <span className="text-sm font-normal"> m²</span>
+            </p>
+            <p className="text-xs text-gray-500">Luas Halaman</p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-center border">
+            <p className="text-xl font-bold text-gray-800">
+              {prasarana.gedung?.jumlah || 0}
+            </p>
+            <p className="text-xs text-gray-500">Jumlah Gedung</p>
           </div>
         </div>
         <div>
           <h4 className="text-card-foreground mb-3">
-            Kondisi Fasilitas Ruangan
+            Detail Kondisi Ruang Kelas
           </h4>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 border rounded-lg">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                    Total
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                    Baik
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                    R. Ringan
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                    R. Sedang
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                    R. Berat
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                    R. Total
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                <tr>
+                  <td className="px-4 py-2 text-sm text-center font-bold">
+                    {ruangKelas.total || ruangKelas.jumlah || 0}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-center text-green-600">
+                    {ruangKelas.good || ruangKelas.baik || 0}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-center text-yellow-600">
+                    {ruangKelas.rusakRingan || 0}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-center text-orange-600">
+                    {ruangKelas.moderate_damage || ruangKelas.rusakSedang || 0}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-center text-red-600">
+                    {ruangKelas.heavy_damage || ruangKelas.rusakBerat || 0}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-center text-red-800">
+                    {ruangKelas.rusakTotal || 0}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h4 className="text-card-foreground mb-3">
+            Detail Tambahan Ruang Kelas
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-red-50 border-red-200 border rounded-lg p-4 text-center">
+              <p className="text-xl font-bold text-red-700">
+                {ruangKelas.kurangRkb || 0}
+              </p>
+              <p className="text-xs text-red-600">Kurang RKB</p>
+            </div>
+            <div className="bg-yellow-50 border-yellow-200 border rounded-lg p-4 text-center">
+              <p className="text-xl font-bold text-yellow-700">
+                {ruangKelas.kelebihan || 0}
+              </p>
+              <p className="text-xs text-yellow-600">Kelebihan (Tak Terawat)</p>
+            </div>
+            <div className="bg-blue-50 border-blue-200 border rounded-lg p-4 text-center">
+              <p className="text-xl font-bold text-blue-700">
+                {ruangKelas.rkbTambahan || 0}
+              </p>
+              <p className="text-xs text-blue-600">RKB Tambahan</p>
+            </div>
+            <div className="bg-gray-100 border rounded-lg p-4 text-center flex flex-col justify-center">
+              <p className="text-lg font-bold text-gray-800 flex items-center justify-center gap-2">
+                <Layers className="h-4 w-4" />
+                <span>{ruangKelas.lahan || "-"}</span>
+              </p>
+              <p className="text-xs text-gray-600">Ketersediaan Lahan</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h4 className="text-card-foreground mb-3">Kondisi Ruangan Lainnya</h4>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 border rounded-lg">
               <thead className="bg-gray-50">
@@ -472,11 +1042,9 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {ruangan.map((item) => {
+                {ruanganLainnya.map((item) => {
                   const data = item.data || {};
-                  const total =
-                    data.total_all || data.total || data.jumlah || 0;
-                  if (total === 0) return null;
+                  const total = data.total || data.jumlah || 0;
                   return (
                     <tr key={item.title}>
                       <td className="px-4 py-2 text-sm font-medium">
@@ -501,17 +1069,171 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
             </table>
           </div>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="text-card-foreground mb-3 flex items-center gap-2">
+              <Armchair className="h-4 w-4" /> Mebeulair
+            </h4>
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-lg p-4 border">
+                <p className="font-semibold text-sm mb-2">Meja</p>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="font-bold text-lg">
+                      {mejaData.total || mejaData.jumlah || 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Jumlah</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg text-green-600">
+                      {mejaData.good || mejaData.baik || 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Baik</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg text-red-600">
+                      {(mejaData.moderate_damage || 0) +
+                        (mejaData.heavy_damage || 0) ||
+                        mejaData.rusak ||
+                        0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Rusak</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4 border">
+                <p className="font-semibold text-sm mb-2">Kursi</p>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="font-bold text-lg">
+                      {kursiData.total || kursiData.jumlah || 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Jumlah</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg text-green-600">
+                      {kursiData.good || kursiData.baik || 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Baik</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg text-red-600">
+                      {(kursiData.moderate_damage || 0) +
+                        (kursiData.heavy_damage || 0) ||
+                        kursiData.rusak ||
+                        0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Rusak</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-card-foreground mb-3 flex items-center gap-2">
+              <Laptop className="h-4 w-4" /> Lainnya
+            </h4>
+            <div className="bg-gray-50 rounded-lg p-4 border h-full flex flex-col justify-center">
+              <p className="text-2xl font-bold text-center">
+                {school.chromebook || 0}
+              </p>
+              <p className="text-sm text-muted-foreground text-center mt-1">
+                Jumlah Chromebook
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
 
-  const renderInstitutionalInfo = () => (
-    <div>
-      <p className="text-muted-foreground">
-        Rincian data kelembagaan belum tersedia di file JSON.
-      </p>
-    </div>
-  );
+  const renderInstitutionalInfo = () => {
+    const data = school.kelembagaan || {};
+
+    const renderInfoItem = (label, value) => (
+      <div className="flex justify-between items-center py-2 border-b last:border-b-0">
+        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className="text-sm font-medium text-card-foreground text-right">
+          {value || "-"}
+        </span>
+      </div>
+    );
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h4 className="text-card-foreground mb-3 font-medium">
+            Status Kelembagaan
+          </h4>
+          <div className="p-4 border rounded-lg bg-gray-50/70">
+            {renderInfoItem(
+              "Peralatan Rumah Tangga",
+              data.peralatanRumahTangga
+            )}
+            {renderInfoItem("Pembinaan", data.pembinaan)}
+            {renderInfoItem("Asesmen", data.asesmen)}
+            {renderInfoItem(
+              "Menyelenggarakan Belajar",
+              data.menyelenggarakanBelajar
+            )}
+            {renderInfoItem(
+              "Melaksanakan Rekomendasi",
+              data.melaksanakanRekomendasi
+            )}
+            {renderInfoItem("Siap Dievaluasi", data.siapDievaluasi)}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="text-card-foreground mb-3 font-medium">BOP</h4>
+            <div className="p-4 border rounded-lg bg-gray-50/70">
+              {renderInfoItem("Pengelola", data.bop?.pengelola)}
+              {renderInfoItem(
+                "Tenaga Ditingkatkan",
+                data.bop?.tenagaPeningkatan
+              )}
+            </div>
+          </div>
+          <div>
+            <h4 className="text-card-foreground mb-3 font-medium">Perizinan</h4>
+            <div className="p-4 border rounded-lg bg-gray-50/70">
+              {renderInfoItem("Pengendalian", data.perizinan?.pengendalian)}
+              {renderInfoItem("Kelayakan", data.perizinan?.kelayakan)}
+            </div>
+          </div>
+        </div>
+        <div>
+          <h4 className="text-card-foreground mb-3 font-medium">Kurikulum</h4>
+          <div className="p-4 border rounded-lg bg-gray-50/70">
+            {renderInfoItem("Silabus", data.kurikulum?.silabus)}
+            {renderInfoItem(
+              "Kompetensi Dasar",
+              data.kurikulum?.kompetensiDasar
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "basic":
+        return renderBasicInfo();
+      case "students":
+        return renderStudentsInfo();
+      case "graduation":
+        return renderGraduationInfo();
+      case "teachers":
+        return renderTeachersInfo();
+      case "facilities":
+        return renderFacilitiesInfo();
+      case "institutional":
+        return renderInstitutionalInfo();
+      default:
+        return null;
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -543,11 +1265,7 @@ export function SchoolDetailsModal({ school, isOpen, onClose }) {
               </nav>
             </div>
             <div className="flex-grow overflow-y-auto p-1 pt-6 pr-3">
-              {activeTab === "basic" && renderBasicInfo()}
-              {activeTab === "students" && renderStudentsInfo()}
-              {activeTab === "teachers" && renderTeachersInfo()}
-              {activeTab === "facilities" && renderFacilitiesInfo()}
-              {activeTab === "institutional" && renderInstitutionalInfo()}
+              {renderContent()}
             </div>
           </>
         ) : (

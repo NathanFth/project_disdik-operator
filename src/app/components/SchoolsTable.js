@@ -263,24 +263,21 @@ const transformSmpData = (schoolData, schoolType) => {
       ...EMPTY_SISWA_DETAIL,
     },
     rombel: {},
-    prasarana: {
-      ruangKelas: {
-        jumlah: school.class_condition?.total_room,
-        baik: school.class_condition?.classrooms_good,
-        rusakSedang: school.class_condition?.classrooms_moderate_damage,
-        rusakBerat: school.class_condition?.classrooms_heavy_damage,
-      },
-      ruangPerpustakaan: school.library
-        ? {
-            jumlah: school.library.total_all,
-            baik: school.library.good,
-            rusakSedang: school.library.moderate_damage,
-            rusakBerat: school.library.heavy_damage,
-          }
-        : {},
-      ruangLaboratorium: school.laboratory_ipa,
-      ruangGuru: school.teacher_room,
-    },
+    // Memetakan semua properti yang relevan dari root objek JSON
+    // Ini adalah perbaikan utama
+    class_condition: school.class_condition,
+    library: school.library,
+    laboratory_comp: school.laboratory_comp,
+    laboratory_langua: school.laboratory_langua,
+    laboratory_ipa: school.laboratory_ipa,
+    laboratory_fisika: school.laboratory_fisika,
+    laboratory_biologi: school.laboratory_biologi,
+    kepsek_room: school.kepsek_room,
+    teacher_room: school.teacher_room,
+    administration_room: school.administration_room,
+    teachers_toilet: school.teachers_toilet,
+    students_toilet: school.students_toilet,
+    furniture_computer: school.furniture_computer,
     guru: EMPTY_GURU_DETAIL,
     siswaAbk: {},
     kelembagaan: {},
