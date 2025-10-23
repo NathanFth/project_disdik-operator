@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, cloneElement } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
-import TopNavbar from "./TopNavbar";
+// import TopNavbar from "./TopNavbar";
 import {
   Save,
   ArrowLeft,
@@ -17,13 +17,6 @@ import {
   UserCheck,
   Loader2,
   Check,
-  FlaskConical,
-  Computer,
-  Languages,
-  Library,
-  Briefcase,
-  PersonStanding,
-  HeartPulse,
 } from "lucide-react";
 
 import { auth } from "../../lib/auth";
@@ -35,7 +28,9 @@ import { cn } from "./ui/utils";
 import { useKecamatanData } from "../../hooks/useKecamatanData";
 import { Combobox } from "./ui/Combobox";
 
-// --- PUSAT KONFIGURASI SEKOLAH ---
+/* =========================
+   PUSAT KONFIGURASI SEKOLAH
+   ========================= */
 const schoolConfigs = {
   SD: {
     grades: [1, 2, 3, 4, 5, 6],
@@ -126,8 +121,6 @@ const createInitialFormData = (config) => {
     siswa: { jumlahSiswa: "" },
     siswaAbk: {},
     rombel: {},
-    // Perubahan di sini: untuk SMP, data prasarana tidak lagi dalam nested object `prasarana`
-    // tetapi berada di root object
     prasarana: {
       ukuran: { tanah: "", bangunan: "", halaman: "" },
       gedung: { jumlah: "" },
@@ -192,10 +185,9 @@ const createInitialFormData = (config) => {
     },
   };
 
-  // Logika khusus untuk SMP
+  // Khusus SMP → struktur flat
   if (config.grades && config.grades.length > 0 && config.grades[0] >= 7) {
     const smpData = {
-      // Menggunakan struktur yang flat sesuai JSON SMP
       class_condition: {
         total_room: "",
         classrooms_good: "",
@@ -290,12 +282,7 @@ const createInitialFormData = (config) => {
           heavy_damage: "",
         },
       },
-      furniture_computer: {
-        tables: "",
-        chairs: "",
-        boards: "",
-        computer: "",
-      },
+      furniture_computer: { tables: "", chairs: "", boards: "", computer: "" },
       siswaLanjutDalamKab: {},
       siswaLanjutLuarKab: {},
       siswaTidakLanjut: "",
@@ -326,14 +313,14 @@ const createInitialFormData = (config) => {
     lanjutDalamKabOptions.forEach((opt) => {
       smpData.siswaLanjutDalamKab[opt.key] = "";
     });
-
     lanjutLuarKabOptions.forEach((opt) => {
       smpData.siswaLanjutLuarKab[opt.key] = "";
     });
+
     return smpData;
   }
 
-  // Logika untuk jenjang lain
+  // PKBM
   if (config.isPkbm) {
     baseData.siswa.paketA = {};
     baseData.siswa.paketB = {};
@@ -360,7 +347,9 @@ const createInitialFormData = (config) => {
     config.lanjutPaketC.forEach((opt) => {
       baseData.lulusanPaketC[opt.key] = "";
     });
-  } else if (config.isPaud) {
+  }
+  // PAUD
+  else if (config.isPaud) {
     baseData.siswaLanjutDalamKab = {};
     baseData.siswaLanjutLuarKab = {};
     baseData.siswaTidakLanjut = "";
@@ -375,7 +364,9 @@ const createInitialFormData = (config) => {
     config.lanjutLuarKabOptions.forEach((opt) => {
       baseData.siswaLanjutLuarKab[opt.key] = "";
     });
-  } else if (config.grades) {
+  }
+  // SD/lainnya
+  else if (config.grades) {
     const { grades, lanjutDalamKabOptions, lanjutLuarKabOptions } = config;
     baseData.status = "Negeri";
     baseData.siswaLanjutDalamKab = {};
@@ -394,9 +385,13 @@ const createInitialFormData = (config) => {
       baseData.siswaLanjutLuarKab[opt.key] = "";
     });
   }
+
   return baseData;
 };
 
+/* ================
+   STEPPER
+   ================ */
 const Stepper = ({
   sections,
   currentStep,
@@ -413,6 +408,7 @@ const Stepper = ({
         const hasError =
           Object.keys(errors).some((key) => section.fields.includes(key)) &&
           !isActive;
+
         return (
           <li
             key={section.id}
@@ -447,6 +443,7 @@ const Stepper = ({
                 {section.title}
               </span>
             </div>
+
             {step < sections.length && (
               <div
                 className="absolute top-5 left-1/2 -z-10 h-0.5 w-full bg-gray-200"
@@ -460,11 +457,15 @@ const Stepper = ({
   </nav>
 );
 
+/* =========================
+   KOMPONEN UTAMA
+   ========================= */
 export default function DataInputForm({ schoolType }) {
   const config = useMemo(
     () => schoolConfigs[schoolType] || schoolConfigs.default,
     [schoolType]
   );
+
   const [isClient, setIsClient] = useState(false);
   const [user, setUser] = useState(null);
   const [isPageLoading, setIsPageLoading] = useState(true);
@@ -547,6 +548,7 @@ export default function DataInputForm({ schoolType }) {
     }
   }, [isClient, router]);
 
+  // auto total siswa
   useEffect(() => {
     let totalSiswa = 0;
     if (config.isPkbm) {
@@ -579,6 +581,7 @@ export default function DataInputForm({ schoolType }) {
         return total + (Number(kelas.l) || 0) + (Number(kelas.p) || 0);
       }, 0);
     }
+
     if (Number(formData.siswa.jumlahSiswa) !== totalSiswa) {
       setFormData((prev) => ({
         ...prev,
@@ -590,11 +593,13 @@ export default function DataInputForm({ schoolType }) {
     }
   }, [formData.siswa, config]);
 
+  /* ====== Validasi ====== */
   const validateField = useCallback((path, value) => {
     const validateRequired = (val, fieldName) =>
       (val || "").toString().trim() ? null : `${fieldName} wajib diisi`;
     const validateNPSN = (npsn) =>
       /^\d{8}$/.test(npsn) ? null : "NPSN harus 8 digit angka";
+
     switch (path) {
       case "namaSekolah":
         return validateRequired(value, "Nama Sekolah");
@@ -610,6 +615,7 @@ export default function DataInputForm({ schoolType }) {
   const validateStep = (stepIndex) => {
     const section = sections[stepIndex];
     if (!section.fields.length) return true;
+
     let isValid = true;
     let stepErrors = {};
     section.fields.forEach((field) => {
@@ -620,32 +626,31 @@ export default function DataInputForm({ schoolType }) {
         isValid = false;
       }
     });
+
     setErrors((prev) => {
-      const newErrors = { ...prev };
-      section.fields.forEach((f) => delete newErrors[f]);
-      return { ...newErrors, ...stepErrors };
+      const ne = { ...prev };
+      section.fields.forEach((f) => delete ne[f]);
+      return { ...ne, ...stepErrors };
     });
+
     return isValid;
   };
 
   const handleNext = () => {
     if (validateStep(currentStep - 1)) {
       setCompletedSteps((prev) => ({ ...prev, [currentStep - 1]: true }));
-      if (currentStep < sections.length) {
-        setCurrentStep(currentStep + 1);
-      }
+      if (currentStep < sections.length) setCurrentStep(currentStep + 1);
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateStep(currentStep - 1)) return;
+
     let allValid = true;
     let allErrors = {};
     sections.forEach((section, index) => {
@@ -660,24 +665,23 @@ export default function DataInputForm({ schoolType }) {
       }
       setCompletedSteps((prev) => ({ ...prev, [index]: true }));
     });
+
     setErrors(allErrors);
     if (!allValid) {
       const firstErrorField = Object.keys(allErrors)[0];
       const errorStepIndex = sections.findIndex((s) =>
         s.fields.includes(firstErrorField)
       );
-      if (errorStepIndex !== -1) {
-        setCurrentStep(errorStepIndex + 1);
-      }
+      if (errorStepIndex !== -1) setCurrentStep(errorStepIndex + 1);
       return;
     }
+
     setSaving(true);
     console.log("Form is valid, submitting...", { ...formData, schoolType });
-    setTimeout(() => {
-      setSaving(false);
-    }, 2000);
+    setTimeout(() => setSaving(false), 2000);
   };
 
+  /* ====== Helpers input ====== */
   const handleInputChange = (path, value) => {
     setFormData((prev) => {
       const keys = path.split(".");
@@ -686,8 +690,7 @@ export default function DataInputForm({ schoolType }) {
       for (let i = 0; i < keys.length - 1; i++) {
         current = current[keys[i]] = current[keys[i]] || {};
       }
-      const finalKey = keys[keys.length - 1];
-      current[finalKey] = value;
+      current[keys[keys.length - 1]] = value;
       return newFormData;
     });
   };
@@ -804,6 +807,7 @@ export default function DataInputForm({ schoolType }) {
     { title: "9. Rumah Dinas", key: "rumahDinas" },
   ];
 
+  /* ====== Render Section ====== */
   const renderSectionContent = (sectionId) => {
     switch (sectionId) {
       case "info": {
@@ -817,6 +821,7 @@ export default function DataInputForm({ schoolType }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
             {renderTextInput("Nama Sekolah", "namaSekolah", "", true)}
             {renderNumberInput("NPSN", "npsn", "8 digit angka", true)}
+
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">
                 Kecamatan <span className="text-destructive">*</span>
@@ -839,6 +844,7 @@ export default function DataInputForm({ schoolType }) {
                 </p>
               )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">
                 Status Sekolah <span className="text-destructive">*</span>
@@ -858,10 +864,12 @@ export default function DataInputForm({ schoolType }) {
                 </p>
               )}
             </div>
-            {renderNumberInput("No. Urut", "noUrut", "0", false)}
+
+            {renderNumberInput("No. Urut", "noUrut", "0")}
           </div>
         );
       }
+
       case "siswa": {
         if (config.isPkbm) {
           return (
@@ -871,12 +879,14 @@ export default function DataInputForm({ schoolType }) {
                   Total Siswa (Semua Paket): {formData.siswa.jumlahSiswa || 0}
                 </h4>
               </div>
+
               <Tabs defaultValue="A" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="A">{config.pakets.A.name}</TabsTrigger>
                   <TabsTrigger value="B">{config.pakets.B.name}</TabsTrigger>
                   <TabsTrigger value="C">{config.pakets.C.name}</TabsTrigger>
                 </TabsList>
+
                 {Object.entries(config.pakets).map(([key, paket]) => (
                   <TabsContent key={key} value={key}>
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -905,6 +915,7 @@ export default function DataInputForm({ schoolType }) {
             </div>
           );
         }
+
         if (config.isPaud) {
           return (
             <div>
@@ -914,6 +925,7 @@ export default function DataInputForm({ schoolType }) {
                   {formData.siswa.jumlahSiswa || 0}
                 </h4>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 {config.rombelTypes.map((type) => (
                   <div
@@ -931,6 +943,7 @@ export default function DataInputForm({ schoolType }) {
             </div>
           );
         }
+
         const { grades, gradeLabel } = config;
         return (
           <div>
@@ -939,6 +952,7 @@ export default function DataInputForm({ schoolType }) {
                 Total Siswa: {formData.siswa.jumlahSiswa || 0}
               </h4>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
               {grades.map((kelas) => (
                 <div
@@ -958,6 +972,7 @@ export default function DataInputForm({ schoolType }) {
           </div>
         );
       }
+
       case "abk": {
         if (config.isPkbm) {
           return (
@@ -967,6 +982,7 @@ export default function DataInputForm({ schoolType }) {
                 <TabsTrigger value="B">{config.pakets.B.name}</TabsTrigger>
                 <TabsTrigger value="C">{config.pakets.C.name}</TabsTrigger>
               </TabsList>
+
               {Object.entries(config.pakets).map(([key, paket]) => (
                 <TabsContent key={`abk-paket-${key}`} value={key}>
                   <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -994,6 +1010,7 @@ export default function DataInputForm({ schoolType }) {
             </Tabs>
           );
         }
+
         if (config.isPaud) {
           return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -1012,6 +1029,7 @@ export default function DataInputForm({ schoolType }) {
             </div>
           );
         }
+
         const { grades, gradeLabel } = config;
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -1032,6 +1050,7 @@ export default function DataInputForm({ schoolType }) {
           </div>
         );
       }
+
       case "rombel": {
         if (config.isPkbm) {
           return (
@@ -1058,6 +1077,7 @@ export default function DataInputForm({ schoolType }) {
             </Tabs>
           );
         }
+
         if (config.isPaud) {
           return (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1072,6 +1092,7 @@ export default function DataInputForm({ schoolType }) {
             </div>
           );
         }
+
         const { grades, gradeLabel } = config;
         return (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -1086,6 +1107,7 @@ export default function DataInputForm({ schoolType }) {
           </div>
         );
       }
+
       case "lanjut": {
         if (config.isPkbm) {
           return (
@@ -1098,7 +1120,9 @@ export default function DataInputForm({ schoolType }) {
                   {config.lanjutPaketB.map((opt) =>
                     cloneElement(
                       renderNumberInput(opt.label, `lulusanPaketB.${opt.key}`),
-                      { key: `lanjut-b-${opt.key}` }
+                      {
+                        key: `lanjut-b-${opt.key}`,
+                      }
                     )
                   )}
                 </div>
@@ -1111,7 +1135,9 @@ export default function DataInputForm({ schoolType }) {
                   {config.lanjutPaketC.map((opt) =>
                     cloneElement(
                       renderNumberInput(opt.label, `lulusanPaketC.${opt.key}`),
-                      { key: `lanjut-c-${opt.key}` }
+                      {
+                        key: `lanjut-c-${opt.key}`,
+                      }
                     )
                   )}
                   {renderNumberInput(
@@ -1123,6 +1149,7 @@ export default function DataInputForm({ schoolType }) {
             </div>
           );
         }
+
         const { lanjutDalamKabOptions, lanjutLuarKabOptions } = config;
         return (
           <div className="space-y-6">
@@ -1137,7 +1164,9 @@ export default function DataInputForm({ schoolType }) {
                       opt.label,
                       `siswaLanjutDalamKab.${opt.key}`
                     ),
-                    { key: `dlm-${opt.key}` }
+                    {
+                      key: `dlm-${opt.key}`,
+                    }
                   )
                 )}
               </div>
@@ -1153,7 +1182,9 @@ export default function DataInputForm({ schoolType }) {
                       opt.label,
                       `siswaLanjutLuarKab.${opt.key}`
                     ),
-                    { key: `luar-${opt.key}` }
+                    {
+                      key: `luar-${opt.key}`,
+                    }
                   )
                 )}
               </div>
@@ -1170,8 +1201,9 @@ export default function DataInputForm({ schoolType }) {
           </div>
         );
       }
+
       case "prasarana": {
-        // Perbaikan di sini: Menambahkan kondisi khusus untuk SMP
+        // Khusus SMP
         if (schoolType === "SMP") {
           const createInputGroup = (title, path) => (
             <div className="p-4 border rounded-lg bg-gray-50/50">
@@ -1207,6 +1239,7 @@ export default function DataInputForm({ schoolType }) {
                   )}
                 </div>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {createInputGroup(
                   "2. Laboratorium Komputer",
@@ -1231,6 +1264,7 @@ export default function DataInputForm({ schoolType }) {
                 {createInputGroup("10. Ruang TU", `administration_room`)}
                 {createInputGroup("11. Ruang UKS", `uks_room`)}
               </div>
+
               <div className="p-4 border rounded-lg bg-gray-50/50">
                 <h4 className="font-semibold text-gray-900 mb-4">
                   12. Rincian Toilet
@@ -1310,6 +1344,7 @@ export default function DataInputForm({ schoolType }) {
                   </div>
                 </div>
               </div>
+
               <div className="p-4 border rounded-lg bg-gray-50/50">
                 <h4 className="font-semibold text-gray-900 mb-4">
                   13. Mebel & Komputer
@@ -1327,7 +1362,8 @@ export default function DataInputForm({ schoolType }) {
             </div>
           );
         }
-        const prasarana = formData.prasarana || {};
+
+        // Non-SMP
         return (
           <div className="space-y-6">
             <div className="p-4 border rounded-lg bg-gray-50/50">
@@ -1341,12 +1377,14 @@ export default function DataInputForm({ schoolType }) {
                 {renderNumberInput("Halaman (m²)", "prasarana.ukuran.halaman")}
               </div>
             </div>
+
             <div className="p-4 border rounded-lg bg-gray-50/50">
               <h4 className="font-semibold text-gray-900 mb-4">2. Gedung</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {renderNumberInput("Jumlah Gedung", "prasarana.gedung.jumlah")}
               </div>
             </div>
+
             <div className="p-4 border rounded-lg bg-gray-50/50">
               <h4 className="font-semibold text-gray-900 mb-4">
                 3. Ruang Kelas
@@ -1371,6 +1409,7 @@ export default function DataInputForm({ schoolType }) {
                   "prasarana.ruangKelas.rusakTotal"
                 )}
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t mt-4">
                 {renderNumberInput(
                   "Kurang RKB",
@@ -1390,7 +1429,8 @@ export default function DataInputForm({ schoolType }) {
                 ])}
               </div>
             </div>
-            {prasaranaItems.map((item) => (
+
+            {[...prasaranaItems].map((item) => (
               <div
                 key={item.key}
                 className="p-4 border rounded-lg bg-gray-50/50"
@@ -1412,6 +1452,7 @@ export default function DataInputForm({ schoolType }) {
                 </div>
               </div>
             ))}
+
             <div className="p-4 border rounded-lg bg-gray-50/50">
               <h4 className="font-semibold text-gray-900 mb-4">
                 10. Mebeulair
@@ -1452,6 +1493,7 @@ export default function DataInputForm({ schoolType }) {
                 </div>
               </div>
             </div>
+
             <div className="p-4 border rounded-lg bg-gray-50/50">
               <h4 className="font-semibold text-gray-900 mb-4">
                 11. Jumlah Chromebook
@@ -1463,6 +1505,7 @@ export default function DataInputForm({ schoolType }) {
           </div>
         );
       }
+
       case "kelembagaan": {
         return (
           <div className="space-y-8">
@@ -1526,6 +1569,7 @@ export default function DataInputForm({ schoolType }) {
                 </div>
               </div>
             </div>
+
             <div className="p-4 md:p-5 border rounded-lg bg-gray-50/70">
               <h4 className="text-base font-semibold text-gray-900 mb-4">
                 4. BOP (Bantuan Operasional Pendidikan)
@@ -1543,6 +1587,7 @@ export default function DataInputForm({ schoolType }) {
                 )}
               </div>
             </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="p-4 md:p-5 border rounded-lg bg-gray-50/70">
                 <h4 className="text-base font-semibold text-gray-900 mb-4">
@@ -1561,6 +1606,7 @@ export default function DataInputForm({ schoolType }) {
                   )}
                 </div>
               </div>
+
               <div className="p-4 md:p-5 border rounded-lg bg-gray-50/70">
                 <h4 className="text-base font-semibold text-gray-900 mb-4">
                   9. Kurikulum
@@ -1582,6 +1628,7 @@ export default function DataInputForm({ schoolType }) {
           </div>
         );
       }
+
       case "guru": {
         return (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -1598,119 +1645,115 @@ export default function DataInputForm({ schoolType }) {
           </div>
         );
       }
+
       default:
         return <p>Konten tidak tersedia.</p>;
     }
   };
 
+  /* ====== Loading & Error ====== */
   if (!isClient || isPageLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="min-h-screen md:pl-64 bg-background grid place-items-center">
+        <Sidebar />
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
       </div>
     );
   }
+
   if (!config.grades && !config.isPaud && !config.isPkbm) {
     return (
-      <div className="flex h-screen bg-gray-50">
+      <div className="min-h-screen md:pl-64 bg-gray-50">
         <Sidebar />
-        <div className="flex-1 flex flex-col md:ml-64">
-          <TopNavbar />
-          <main className="flex-1 flex items-center justify-center p-4">
-            <div className="text-center">
-              <h1 className="text-xl font-semibold text-destructive">
-                Error: Tipe Sekolah Tidak Valid
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Konfigurasi untuk "{schoolType}" tidak ditemukan.
-              </p>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
-  const activeSection = sections[currentStep - 1];
-  return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col md:ml-64">
-        <TopNavbar />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="mb-8">
-              <h1 className="text-2xl font-bold text-gray-800">
-                Input Data {schoolType}
-              </h1>
-              <p className="text-sm text-gray-500">
-                Lengkapi data sekolah langkah demi langkah.
-              </p>
-            </div>
-            <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 mb-8 sticky top-0 z-10 backdrop-blur-sm bg-opacity-80">
-              <Stepper
-                sections={sections}
-                currentStep={currentStep}
-                setStep={setCurrentStep}
-                errors={errors}
-                completedSteps={completedSteps}
-              />
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="bg-white p-6 rounded-lg border">
-                <CardHeader className="p-0 mb-6">
-                  <CardTitle className="flex items-center gap-3 text-lg">
-                    {activeSection.icon}
-                    {activeSection.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {renderSectionContent(activeSection.id)}
-                </CardContent>
-              </div>
-              <div className="mt-8 flex justify-between items-center">
-                <div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => router.back()}
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" /> Batal
-                  </Button>
-                </div>
-                <div className="flex items-center gap-4">
-                  {currentStep > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleBack}
-                    >
-                      Kembali
-                    </Button>
-                  )}
-                  {currentStep < sections.length ? (
-                    <Button type="button" onClick={handleNext}>
-                      Lanjut
-                    </Button>
-                  ) : (
-                    <Button type="submit" disabled={saving}>
-                      {saving ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                          Menyimpan...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="mr-2 h-4 w-4" /> Simpan Data
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </form>
+        <main className="max-w-4xl mx-auto p-6">
+          <div className="text-center rounded-lg border bg-white p-8">
+            <h1 className="text-xl font-semibold text-destructive">
+              Error: Tipe Sekolah Tidak Valid
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Konfigurasi untuk "{schoolType}" tidak ditemukan.
+            </p>
           </div>
         </main>
       </div>
+    );
+  }
+
+  /* ====== Normal Render ====== */
+  const activeSection = sections[currentStep - 1];
+
+  return (
+    <div className="min-h-screen md:pl-64 bg-gray-50">
+      <Sidebar />
+      {/* <TopNavbar /> */}
+      <main className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        <form onSubmit={handleSubmit}>
+          <Card className="bg-white rounded-lg border">
+            <CardHeader className="p-6 border-b">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  Input Data {schoolType}
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Lengkapi data sekolah langkah demi langkah.
+                </p>
+              </div>
+
+              {/* Stepper di dalam card yang sama */}
+              <div className="mt-6">
+                <Stepper
+                  sections={sections}
+                  currentStep={currentStep}
+                  setStep={setCurrentStep}
+                  errors={errors}
+                  completedSteps={completedSteps}
+                />
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-6">
+              <CardTitle className="flex items-center gap-3 text-lg mb-4">
+                {activeSection.icon}
+                {activeSection.title}
+              </CardTitle>
+
+              {renderSectionContent(activeSection.id)}
+            </CardContent>
+          </Card>
+
+          <div className="mt-8 flex justify-between items-center">
+            <Button type="button" variant="ghost" onClick={() => router.back()}>
+              <ArrowLeft className="h-4 w-4 mr-2" /> Batal
+            </Button>
+
+            <div className="flex items-center gap-4">
+              {currentStep > 1 && (
+                <Button type="button" variant="outline" onClick={handleBack}>
+                  Kembali
+                </Button>
+              )}
+              {currentStep < sections.length ? (
+                <Button type="button" onClick={handleNext}>
+                  Lanjut
+                </Button>
+              ) : (
+                <Button type="submit" disabled={saving}>
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                      Menyimpan...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" /> Simpan Data
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
+        </form>
+      </main>
     </div>
   );
 }
