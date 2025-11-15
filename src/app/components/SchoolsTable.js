@@ -1,5 +1,8 @@
 "use client";
 
+import { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
+
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -19,8 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+
 import {
-  School,
+  School as SchoolIcon,
   Search,
   Edit,
   Eye,
@@ -31,8 +35,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
-import { useState, useMemo, useEffect } from "react";
-import { SchoolDetailsModal } from "./SchoolDetailsModal";
+
 import { EditSchoolModal } from "./EditSchoolModal";
 
 // --- KONFIGURASI FILE DATA ---
@@ -68,7 +71,6 @@ const EMPTY_GURU_DETAIL = {
 };
 
 // --- FUNGSI TRANSFORMASI ---
-
 const transformSdData = (schoolData, schoolType) => {
   const allSchools = Object.entries(schoolData).flatMap(
     ([kecamatanName, schoolsInKecamatan]) =>
@@ -263,8 +265,7 @@ const transformSmpData = (schoolData, schoolType) => {
       ...EMPTY_SISWA_DETAIL,
     },
     rombel: {},
-    // Memetakan semua properti yang relevan dari root objek JSON
-    // Ini adalah perbaikan utama
+    // map properti prasarana SMP
     class_condition: school.class_condition,
     library: school.library,
     laboratory_comp: school.laboratory_comp,
@@ -289,9 +290,11 @@ export default function SchoolsTable({ operatorType }) {
   const [kecamatanList, setKecamatanList] = useState([]);
   const [selectedKecamatan, setSelectedKecamatan] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
+
+  // detail modal DIHAPUS → hanya edit modal yg dipakai
   const [selectedSchool, setSelectedSchool] = useState(null);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -313,7 +316,6 @@ export default function SchoolsTable({ operatorType }) {
         const rawData = await response.json();
 
         let transformedSchools = [];
-        let finalFilteredSchools = [];
 
         switch (operatorType) {
           case "SD":
@@ -333,6 +335,8 @@ export default function SchoolsTable({ operatorType }) {
             transformedSchools = [];
         }
 
+        // filter PAUD/TK
+        let finalFilteredSchools = transformedSchools;
         if (operatorType === "TK") {
           finalFilteredSchools = transformedSchools.filter(
             (school) => school.jenjang === "TK"
@@ -341,8 +345,6 @@ export default function SchoolsTable({ operatorType }) {
           finalFilteredSchools = transformedSchools.filter(
             (school) => school.jenjang !== "TK"
           );
-        } else {
-          finalFilteredSchools = transformedSchools;
         }
 
         setSchoolsData(finalFilteredSchools);
@@ -372,10 +374,10 @@ export default function SchoolsTable({ operatorType }) {
       );
     }
     if (searchTerm) {
-      const lowercasedSearchTerm = searchTerm.toLowerCase();
+      const lower = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (school) =>
-          school.namaSekolah?.toLowerCase().includes(lowercasedSearchTerm) ||
+          school.namaSekolah?.toLowerCase().includes(lower) ||
           school.npsn?.includes(searchTerm)
       );
     }
@@ -394,11 +396,6 @@ export default function SchoolsTable({ operatorType }) {
     setCurrentPage(1);
   }, [searchTerm, selectedKecamatan, itemsPerPage]);
 
-  const handleViewDetails = (school) => {
-    setSelectedSchool(school);
-    setIsDetailsModalOpen(true);
-  };
-
   const handleEditSchool = (school) => {
     setSelectedSchool(school);
     setIsEditModalOpen(true);
@@ -415,13 +412,19 @@ export default function SchoolsTable({ operatorType }) {
   const getTableTitle = () => `Data ${operatorType}`;
   const getSearchPlaceholder = () => `Cari nama sekolah atau NPSN...`;
 
+  // helper path detail per jenjang (sesuai pages yg tadi kita buat)
+  const getDetailHref = (opType, npsn) => {
+    const seg = opType.toLowerCase(); // "sd" | "smp" | "paud" | "tk" | "pkbm"
+    return `/dashboard/${seg}/${npsn}`;
+  };
+
   return (
     <>
       <Card className="rounded-xl shadow-sm border border-border/60">
         <CardHeader className="border-b border-border/60 p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <School className="h-5 w-5 text-primary" />
+              <SchoolIcon className="h-5 w-5 text-primary" />
               {getTableTitle()}
             </CardTitle>
             <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
@@ -442,7 +445,7 @@ export default function SchoolsTable({ operatorType }) {
                 </SelectContent>
               </Select>
               <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={getSearchPlaceholder()}
                   className="pl-10 rounded-lg w-full sm:w-64 bg-background"
@@ -461,7 +464,7 @@ export default function SchoolsTable({ operatorType }) {
             </div>
           ) : paginatedSchools.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
-              <School className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <SchoolIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
               <p className="font-semibold mb-1">
                 {searchTerm || selectedKecamatan !== "all"
                   ? "Tidak ada hasil yang cocok"
@@ -481,9 +484,7 @@ export default function SchoolsTable({ operatorType }) {
                     <TableHead>NPSN</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-center">Jumlah Siswa</TableHead>
-                    <TableHead className="w-32 pr-6 text-center">
-                      Aksi
-                    </TableHead>
+                    <TableHead className="w-40 pr-6 text-center">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -505,27 +506,24 @@ export default function SchoolsTable({ operatorType }) {
                         {school.npsn}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant="outline"
-                          className="font-normal capitalize"
-                        >
-                          {school.status.toLowerCase()}
+                        <Badge variant="outline" className="font-normal capitalize">
+                          {String(school.status || "").toLowerCase()}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center font-medium">
                         {school.siswa.jumlahSiswa}
                       </TableCell>
                       <TableCell className="pr-6">
-                        <div className="flex gap-1 justify-center">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-full"
-                            onClick={() => handleViewDetails(school)}
-                            title="Lihat Detail"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                        <div className="flex gap-2 justify-center">
+                          {/* DETAIL: Navigate ke halaman detail */}
+                          <Link href={getDetailHref(operatorType, school.npsn)}>
+                            <Button variant="outline" size="sm" className="h-8 px-3 rounded-full">
+                              <Eye className="h-4 w-4 mr-2" />
+                              Detail
+                            </Button>
+                          </Link>
+
+                          {/* EDIT: masih pakai modal */}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -546,7 +544,7 @@ export default function SchoolsTable({ operatorType }) {
         </CardContent>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 border-t border-border/60">
+          <div className="flex items-center justify-between p-4 border-top border-border/60">
             <div className="text-sm text-muted-foreground">
               Menampilkan <strong>{paginatedSchools.length}</strong> dari{" "}
               <strong>{filteredSchools.length}</strong> data
@@ -556,9 +554,7 @@ export default function SchoolsTable({ operatorType }) {
                 <span className="text-sm">Baris per halaman:</span>
                 <Select
                   value={`${itemsPerPage}`}
-                  onValueChange={(value) => {
-                    setItemsPerPage(Number(value));
-                  }}
+                  onValueChange={(value) => setItemsPerPage(Number(value))}
                 >
                   <SelectTrigger className="h-8 w-[70px] bg-background">
                     <SelectValue placeholder={itemsPerPage} />
@@ -587,7 +583,7 @@ export default function SchoolsTable({ operatorType }) {
                 <Button
                   variant="outline"
                   className="h-8 w-8 p-0"
-                  onClick={() => setCurrentPage(currentPage - 1)}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -595,7 +591,7 @@ export default function SchoolsTable({ operatorType }) {
                 <Button
                   variant="outline"
                   className="h-8 w-8 p-0"
-                  onClick={() => setCurrentPage(currentPage + 1)}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -621,14 +617,7 @@ export default function SchoolsTable({ operatorType }) {
         </Button>
       </div>
 
-      <SchoolDetailsModal
-        school={selectedSchool}
-        isOpen={isDetailsModalOpen}
-        onClose={() => {
-          setIsDetailsModalOpen(false);
-          setSelectedSchool(null);
-        }}
-      />
+      {/* EDIT MODAL */}
       <EditSchoolModal
         school={selectedSchool}
         isOpen={isEditModalOpen}

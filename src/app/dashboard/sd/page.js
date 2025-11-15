@@ -3,6 +3,7 @@
 import SchoolsTable from "../../components/SchoolsTable";
 import { BookOpen } from "lucide-react";
 
+
 export default function SdPage() {
   return (
     <>
