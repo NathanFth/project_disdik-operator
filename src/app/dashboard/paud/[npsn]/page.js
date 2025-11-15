@@ -9,119 +9,87 @@ import { Button } from "../../../components/ui/button";
 import SchoolDetailsTabs from "../../../components/SchoolDetailsTabs";
 import { BookOpen, ArrowLeft, Loader2, PencilLine } from "lucide-react";
 
-const SD_DATA_URL = "/data/sd_new.json";
+const PAUD_DATA_URL = "/data/paud.json";
+const OPERATOR_TYPE = "PAUD";
 
-// Fungsi transform khusus SD, disamakan dengan yang dipakai di tabel
-function transformSingleSdSchool(rawSchool, kecamatanName) {
-  const classes = rawSchool.classes || {};
-  const rombel = rawSchool.rombel || {};
-  const facilities = rawSchool.facilities || {};
-  const classCondition = rawSchool.class_condition || {};
-  const library = rawSchool.library || {};
-  const laboratory = rawSchool.laboratory || {};
-  const teacherRoom = rawSchool.teacher_room || {};
-  const uksRoom = rawSchool.uks_room || {};
-  const toilets = rawSchool.toilets || {};
-  const officialResidences = rawSchool.official_residences || {};
-  const furniture = rawSchool.furniture || {};
+// Sama seperti di SchoolsTable.js
+const EMPTY_SISWA_DETAIL = {
+  kelas1: { l: 0, p: 0 },
+  kelas2: { l: 0, p: 0 },
+  kelas3: { l: 0, p: 0 },
+  kelas4: { l: 0, p: 0 },
+  kelas5: { l: 0, p: 0 },
+  kelas6: { l: 0, p: 0 },
+  kelas7: { l: 0, p: 0 },
+  kelas8: { l: 0, p: 0 },
+  kelas9: { l: 0, p: 0 },
+};
 
-  const studentCount = parseInt(rawSchool.student_count, 10) || 0;
+const EMPTY_GURU_DETAIL = {
+  jumlahGuru: 0,
+  pns: 0,
+  pppk: 0,
+  pppkParuhWaktu: 0,
+  nonAsnDapodik: 0,
+  nonAsnTidakDapodik: 0,
+  kekuranganGuru: 0,
+};
 
-  const stMale = Object.keys(classes)
-    .filter((k) => k.endsWith("_L"))
-    .reduce((sum, key) => sum + (classes[key] || 0), 0);
+// transform 1 sekolah PAUD/TK -> bentuk yang dipakai SchoolDetailsTabs
+function transformSinglePaudSchool(rawSchool, kecamatanName) {
+  const school = {
+    ...rawSchool,
+    kecamatan: kecamatanName,
+    jenjang: rawSchool.type, // "TK", "KB", "SPS", dll
+  };
 
-  const stFemale = Object.keys(classes)
-    .filter((k) => k.endsWith("_P"))
-    .reduce((sum, key) => sum + (classes[key] || 0), 0);
+  const totalSiswa = parseInt(school.student_count, 10) || 0;
 
   return {
-    id: rawSchool.npsn,
-    namaSekolah: rawSchool.name,
-    npsn: rawSchool.npsn,
-    kecamatan: kecamatanName,
-    status: rawSchool.type,
-    schoolType: "SD",
-    jenjang: "SD",
+    id: school.npsn,
+    namaSekolah: school.name,
+    npsn: school.npsn,
+    kecamatan: school.kecamatan,
+    status: "SWASTA",
+    schoolType: OPERATOR_TYPE, // "PAUD" -> supaya isPaud = true
+    jenjang: school.jenjang,
+    dataStatus: totalSiswa > 0 ? "Aktif" : "Data Belum Lengkap",
 
-    dataStatus: studentCount > 0 ? "Aktif" : "Data Belum Lengkap",
-    st_male: stMale,
-    st_female: stFemale,
+    st_male: parseInt(school.st_male, 10) || 0,
+    st_female: parseInt(school.st_female, 10) || 0,
 
     siswa: {
-      jumlahSiswa: studentCount,
-      kelas1: {
-        l: parseInt(classes["1_L"], 10) || 0,
-        p: parseInt(classes["1_P"], 10) || 0,
-      },
-      kelas2: {
-        l: parseInt(classes["2_L"], 10) || 0,
-        p: parseInt(classes["2_P"], 10) || 0,
-      },
-      kelas3: {
-        l: parseInt(classes["3_L"], 10) || 0,
-        p: parseInt(classes["3_P"], 10) || 0,
-      },
-      kelas4: {
-        l: parseInt(classes["4_L"], 10) || 0,
-        p: parseInt(classes["4_P"], 10) || 0,
-      },
-      kelas5: {
-        l: parseInt(classes["5_L"], 10) || 0,
-        p: parseInt(classes["5_P"], 10) || 0,
-      },
-      kelas6: {
-        l: parseInt(classes["6_L"], 10) || 0,
-        p: parseInt(classes["6_P"], 10) || 0,
-      },
+      jumlahSiswa: totalSiswa,
+      ...EMPTY_SISWA_DETAIL,
     },
 
-    rombel: {
-      kelas1: rombel["1"] || 0,
-      kelas2: rombel["2"] || 0,
-      kelas3: rombel["3"] || 0,
-      kelas4: rombel["4"] || 0,
-      kelas5: rombel["5"] || 0,
-      kelas6: rombel["6"] || 0,
-    },
+    rombel: school.rombel || {},
 
     prasarana: {
       ukuran: {
-        tanah: facilities.land_area,
-        bangunan: facilities.building_area,
-        halaman: facilities.yard_area,
+        tanah: school.building_status?.tanah?.land_available,
       },
       ruangKelas: {
-        jumlah: classCondition.total_room,
-        baik: classCondition.classrooms_good,
-        rusakSedang: classCondition.classrooms_moderate_damage,
-        rusakBerat: classCondition.classrooms_heavy_damage,
+        jumlah: school.class_condition?.total_room,
+        baik: school.class_condition?.classrooms_good,
+        rusakSedang: school.class_condition?.classrooms_moderate_damage,
+        rusakBerat: school.class_condition?.classrooms_heavy_damage,
       },
-      ruangPerpustakaan: library,
-      ruangLaboratorium: laboratory,
-      ruangGuru: teacherRoom,
-      ruangUks: uksRoom,
-      toiletGuruSiswa: toilets,
-      rumahDinas: officialResidences,
-      mebeulair: furniture,
+      toiletGuruSiswa: {
+        jumlah: school.toilets?.n_available,
+        baik: school.toilets?.good,
+        rusakSedang: school.toilets?.moderate_damage,
+        rusakBerat: school.toilets?.heavy_damage,
+      },
     },
 
-    // sementara guru / ABK / kelembagaan masih kosong
-    guru: {
-      jumlahGuru: 0,
-      pns: 0,
-      pppk: 0,
-      pppkParuhWaktu: 0,
-      nonAsnDapodik: 0,
-      nonAsnTidakDapodik: 0,
-      kekuranganGuru: 0,
-    },
+    guru: EMPTY_GURU_DETAIL,
     siswaAbk: {},
     kelembagaan: {},
   };
 }
 
-export default function SdDetailPage() {
+export default function PaudDetailPage() {
   const params = useParams();
   const npsnParam = Array.isArray(params?.npsn) ? params.npsn[0] : params?.npsn;
   const router = useRouter();
@@ -142,27 +110,32 @@ export default function SdDetailPage() {
           throw new Error("NPSN tidak valid");
         }
 
-        const res = await fetch(SD_DATA_URL);
+        const res = await fetch(PAUD_DATA_URL);
         if (!res.ok) {
-          throw new Error("Gagal memuat data SD");
+          throw new Error("Gagal memuat data PAUD");
         }
 
         const rawData = await res.json();
 
-        // Ubah JSON → array sekolah yang sudah di-transform
+        // JSON: { "Banjarwangi": [ {...}, {...} ], ... }
         const transformedSchools = Object.entries(rawData).flatMap(
           ([kecamatanName, schoolsInKecamatan]) =>
             schoolsInKecamatan.map((school) =>
-              transformSingleSdSchool(school, kecamatanName)
+              transformSinglePaudSchool(school, kecamatanName)
             )
         );
 
-        const found = transformedSchools.find(
+        // Untuk operator PAUD: semua selain jenjang TK
+        const filteredSchools = transformedSchools.filter(
+          (school) => school.jenjang !== "TK"
+        );
+
+        const found = filteredSchools.find(
           (school) => String(school.npsn) === String(npsnParam)
         );
 
         if (!found) {
-          throw new Error("Sekolah dengan NPSN tersebut tidak ditemukan");
+          throw new Error("Satuan PAUD dengan NPSN tersebut tidak ditemukan");
         }
 
         if (!ignore) {
@@ -174,9 +147,7 @@ export default function SdDetailPage() {
           setDetail(null);
         }
       } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
+        if (!ignore) setLoading(false);
       }
     }
 
@@ -197,10 +168,10 @@ export default function SdDetailPage() {
             <div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                 <BookOpen className="h-4 w-4" />
-                <span>Detail SD</span>
+                <span>Detail PAUD</span>
               </div>
               <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
-                Detail SD
+                Detail PAUD
               </h1>
               {npsnParam && (
                 <p className="text-sm text-muted-foreground">
@@ -219,13 +190,13 @@ export default function SdDetailPage() {
                 <ArrowLeft className="h-4 w-4" />
                 Kembali
               </Button>
-              <Link href="/dashboard/sd">
+              <Link href="/dashboard/paud">
                 <Button variant="outline" size="sm">
-                  Ke Data SD
+                  Ke Data PAUD
                 </Button>
               </Link>
               {npsnParam && (
-                <Link href={`/dashboard/sd/edit/${npsnParam}`}>
+                <Link href={`/dashboard/paud/edit/${npsnParam}`}>
                   <Button size="sm">
                     <PencilLine className="h-4 w-4 mr-2" />
                     Edit
@@ -239,7 +210,7 @@ export default function SdDetailPage() {
           {loading && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Memuat detail...
+              Memuat detail…
             </div>
           )}
 
