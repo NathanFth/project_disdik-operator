@@ -1,3 +1,4 @@
+// src/app/components/SchoolDetailsTabs.jsx
 "use client";
 
 import { useState } from "react";
@@ -24,6 +25,7 @@ import {
   Briefcase,
   PersonStanding,
   HeartPulse,
+  //Wrench, // --- BARU --- Tambahkan Ikon Wrench
 } from "lucide-react";
 
 // --- KONSTANTA (sama seperti di modal) ---
@@ -560,6 +562,10 @@ export default function SchoolDetailsTabs({ school }) {
   };
 
   const renderFacilitiesInfo = () => {
+    // --- BARU ---
+    // Ambil data kegiatan fisik dari prop 'school'
+    const kegiatan = school.kegiatanFisik || {};
+
     const RoomCard = ({ item }) => {
       const data = item.data || {};
       const total =
@@ -858,7 +864,7 @@ export default function SchoolDetailsTabs({ school }) {
       );
     }
 
-    // Fallback PAUD / PKBM
+    // Fallback PAUD / PKBM / SD
     const prasarana = school.prasarana || {};
     const ruangKelas = prasarana.classrooms || prasarana.ruangKelas || {};
     const ruanganLainnya = [
@@ -1002,6 +1008,41 @@ export default function SchoolDetailsTabs({ school }) {
             </div>
           </div>
         </div>
+
+        {/* --- BLOK BARU --- */}
+        <div>
+          <h4 className="text-card-foreground mb-3">
+            Rencana Kegiatan Fisik (DAK)
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-blue-50 border-blue-200 border rounded-lg p-4 text-center">
+              <p className="text-xl font-bold text-blue-700">
+                {kegiatan.rehabRuangKelas || 0}
+              </p>
+              <p className="text-xs text-blue-600">Rehab Ruang Kelas</p>
+            </div>
+            <div className="bg-blue-50 border-blue-200 border rounded-lg p-4 text-center">
+              <p className="text-xl font-bold text-blue-700">
+                {kegiatan.pembangunanRKB || 0}
+              </p>
+              <p className="text-xs text-blue-600">Pembangunan RKB</p>
+            </div>
+            <div className="bg-blue-50 border-blue-200 border rounded-lg p-4 text-center">
+              <p className="text-xl font-bold text-blue-700">
+                {kegiatan.rehabToilet || 0}
+              </p>
+              <p className="text-xs text-blue-600">Rehab Toilet</p>
+            </div>
+            <div className="bg-blue-50 border-blue-200 border rounded-lg p-4 text-center">
+              <p className="text-xl font-bold text-blue-700">
+                {kegiatan.pembangunanToilet || 0}
+              </p>
+              <p className="text-xs text-blue-600">Pembangunan Toilet</p>
+            </div>
+          </div>
+        </div>
+        {/* --- SELESAI BLOK BARU --- */}
+
         <div>
           <h4 className="text-card-foreground mb-3">Kondisi Ruangan Lainnya</h4>
           <div className="overflow-x-auto">

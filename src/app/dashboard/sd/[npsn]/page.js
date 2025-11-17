@@ -1,3 +1,4 @@
+// src/app/dashboard/sd/[npsn]/page.js
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,6 +11,9 @@ import SchoolDetailsTabs from "../../../components/SchoolDetailsTabs";
 import { BookOpen, ArrowLeft, Loader2, PencilLine } from "lucide-react";
 
 const SD_DATA_URL = "/data/sd_new.json";
+// --- BARU ---
+// Definisikan URL untuk data kegiatan baru
+const KEGIATAN_DATA_URL = "/data/data_kegiatan_sd.json";
 
 // Fungsi transform khusus SD, disamakan dengan yang dipakai di tabel
 function transformSingleSdSchool(rawSchool, kecamatanName) {
@@ -118,6 +122,9 @@ function transformSingleSdSchool(rawSchool, kecamatanName) {
     },
     siswaAbk: {},
     kelembagaan: {},
+    // --- BARU ---
+    // Siapkan tempat untuk data kegiatan fisik
+    kegiatanFisik: {},
   };
 }
 
@@ -142,12 +149,23 @@ export default function SdDetailPage() {
           throw new Error("NPSN tidak valid");
         }
 
-        const res = await fetch(SD_DATA_URL);
+        // --- DIPERBARUI ---
+        // Fetch data sekolah dan data kegiatan secara paralel
+        const [res, resKegiatan] = await Promise.all([
+          fetch(SD_DATA_URL),
+          fetch(KEGIATAN_DATA_URL),
+        ]);
+
         if (!res.ok) {
           throw new Error("Gagal memuat data SD");
         }
+        if (!resKegiatan.ok) {
+          throw new Error("Gagal memuat data kegiatan SD");
+        }
 
         const rawData = await res.json();
+        const rawKegiatanData = await resKegiatan.json();
+        // --- SELESAI DIPERBARUI ---
 
         // Ubah JSON → array sekolah yang sudah di-transform
         const transformedSchools = Object.entries(rawData).flatMap(
@@ -164,6 +182,46 @@ export default function SdDetailPage() {
         if (!found) {
           throw new Error("Sekolah dengan NPSN tersebut tidak ditemukan");
         }
+
+        // --- BARU ---
+        // Setelah sekolah ditemukan, cari data kegiatannya
+        if (found && rawKegiatanData) {
+          // 1. Filter semua kegiatan untuk NPSN ini
+          const kegiatanSekolah = rawKegiatanData.filter(
+            (keg) => String(keg.npsn) === String(npsnParam)
+          );
+
+          // 2. Proses dan hitung total "Lokal" untuk setiap jenis kegiatan
+          // (Kita gunakan .toLowerCase() agar lebih aman)
+          const rehabRuangKelas = kegiatanSekolah
+            .filter((k) =>
+              k.Kegiatan.toLowerCase().includes("rehab ruang kelas")
+            )
+            .reduce((sum, item) => sum + (Number(item.Lokal) || 0), 0);
+
+          const rehabToilet = kegiatanSekolah
+            .filter((k) => k.Kegiatan.toLowerCase().includes("rehab toilet"))
+            .reduce((sum, item) => sum + (Number(item.Lokal) || 0), 0);
+
+          const pembangunanToilet = kegiatanSekolah
+            .filter((k) =>
+              k.Kegiatan.toLowerCase().includes("pembangunan toilet")
+            )
+            .reduce((sum, item) => sum + (Number(item.Lokal) || 0), 0);
+
+          const pembangunanRKB = kegiatanSekolah
+            .filter((k) => k.Kegiatan.toLowerCase().includes("pembangunan rkb"))
+            .reduce((sum, item) => sum + (Number(item.Lokal) || 0), 0);
+
+          // 3. Masukkan data yang sudah diproses ke object sekolah
+          found.kegiatanFisik = {
+            rehabRuangKelas,
+            rehabToilet,
+            pembangunanToilet,
+            pembangunanRKB,
+          };
+        }
+        // --- SELESAI BARU ---
 
         if (!ignore) {
           setDetail(found);
