@@ -5,9 +5,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
-import Sidebar from "../../../components/Sidebar";
-import { Button } from "../../../components/ui/button";
-import SchoolDetailsTabs from "../../../components/SchoolDetailsTabs";
+import Sidebar from "../../../../components/Sidebar";
+import { Button } from "../../../../components/ui/button";
+import SchoolDetailsTabs from "../../../../components/SchoolDetailsTabs";
 import { BookOpen, ArrowLeft, Loader2, PencilLine } from "lucide-react";
 
 const SD_DATA_URL = "/data/sd_new.json";

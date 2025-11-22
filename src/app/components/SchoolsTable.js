@@ -484,7 +484,9 @@ export default function SchoolsTable({ operatorType }) {
                     <TableHead>NPSN</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-center">Jumlah Siswa</TableHead>
-                    <TableHead className="w-40 pr-6 text-center">Aksi</TableHead>
+                    <TableHead className="w-40 pr-6 text-center">
+                      Aksi
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -506,7 +508,10 @@ export default function SchoolsTable({ operatorType }) {
                         {school.npsn}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="font-normal capitalize">
+                        <Badge
+                          variant="outline"
+                          className="font-normal capitalize"
+                        >
                           {String(school.status || "").toLowerCase()}
                         </Badge>
                       </TableCell>
@@ -517,7 +522,11 @@ export default function SchoolsTable({ operatorType }) {
                         <div className="flex gap-2 justify-center">
                           {/* DETAIL: Navigate ke halaman detail */}
                           <Link href={getDetailHref(operatorType, school.npsn)}>
-                            <Button variant="outline" size="sm" className="h-8 px-3 rounded-full">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-3 rounded-full"
+                            >
                               <Eye className="h-4 w-4 mr-2" />
                               Detail
                             </Button>
@@ -591,7 +600,9 @@ export default function SchoolsTable({ operatorType }) {
                 <Button
                   variant="outline"
                   className="h-8 w-8 p-0"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   <ChevronRight className="h-4 w-4" />

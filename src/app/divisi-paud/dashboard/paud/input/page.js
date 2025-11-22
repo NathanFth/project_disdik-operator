@@ -5,16 +5,16 @@ import Sidebar from "../../../components/Sidebar";
 import InputPageBody from "../../../components/InputPageBody";
 import { ClipboardList } from "lucide-react";
 
-export default function SdInputPage() {
+export default function PaudInputPage() {
   return (
     <>
       <Sidebar />
       <div className="min-h-screen bg-background md:pl-0">
         {/* <TopNavbar /> */}
         <InputPageBody
-          title="Input Data SD"
-          schoolType="SD"
-          schemaKey="SD"
+          title="Input Data PAUD"
+          schoolType="PAUD" // <- penting: tetap PAUD
+          schemaKey="TKPAUD" // pakai "TKPAUD" kalau skema gabungan; ganti "PAUD" kalau perlu terpisah
           Icon={ClipboardList}
         />
       </div>

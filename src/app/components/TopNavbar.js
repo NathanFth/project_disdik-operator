@@ -12,16 +12,23 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { useRouter } from "next/navigation";
-import { auth } from "../../lib/auth";
+
 import CommandPalette from "./CommandPalette";
+import { supabase } from "@/lib/supabase/lib/client";
 
 export default function TopNavbar() {
   const [openCmd, setOpenCmd] = useState(false);
   const router = useRouter();
 
-  const handleLogout = useCallback(() => {
-    auth.logout();
-    router.push("/login");
+  // ======= LOGOUT Supabase (FIXED) =======
+  const handleLogout = useCallback(async () => {
+    try {
+      await supabase.auth.signOut(); // hapus session Supabase
+      localStorage.removeItem("user"); // hapus penyimpanan UI kalau ada
+      router.push("/divisi-sd/login"); // arahkan ke login
+    } catch (err) {
+      console.log("Logout error:", err.message);
+    }
   }, [router]);
 
   return (
@@ -35,7 +42,7 @@ export default function TopNavbar() {
             Kab. Garut
           </span>
 
-          {/* Tombol buka Command Palette */}
+          {/* Tombol Command Palette */}
           <Button
             variant="outline"
             className="hidden md:inline-flex rounded-xl"
@@ -59,20 +66,25 @@ export default function TopNavbar() {
                     <User className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden md:inline-block">Operator</span>
+                <span className="hidden md:inline-block">Divisi SD</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent align="end" className="w-48 rounded-xl">
               <DropdownMenuItem className="cursor-pointer rounded-lg">
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
+
               <DropdownMenuItem className="cursor-pointer rounded-lg">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
+
               <DropdownMenuSeparator />
+
+              {/* Logout */}
               <DropdownMenuItem
                 onClick={handleLogout}
                 className="cursor-pointer text-destructive rounded-lg"
@@ -83,7 +95,7 @@ export default function TopNavbar() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Untuk mobile, tampilkan tombol command juga */}
+          {/* Mobile Command Button */}
           <Button
             variant="outline"
             className="md:hidden rounded-xl"
@@ -95,7 +107,7 @@ export default function TopNavbar() {
         </div>
       </div>
 
-      {/* Render Command Palette (controlled) */}
+      {/* Command Palette */}
       <CommandPalette open={openCmd} onOpenChange={setOpenCmd} />
     </header>
   );

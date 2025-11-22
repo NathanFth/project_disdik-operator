@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+
 import {
   LayoutDashboard,
   GraduationCap,
@@ -16,7 +17,9 @@ import {
   User,
   Plus,
 } from "lucide-react";
-import { auth, getRoleDisplayName } from "../../lib/auth";
+import { supabase } from "@/lib/supabase/lib/client";
+
+
 
 const IconMap = {
   LayoutDashboard,
@@ -28,33 +31,68 @@ const IconMap = {
   Plus,
 };
 
+const menuItems = [
+  {
+    name: "Dashboard",
+    href: "/divisi-sd/dashboard",
+    icon: "LayoutDashboard",
+  },
+  {
+    name: "Data SD",
+    href: "/divisi-sd/dashboard/sd",
+    icon: "BookOpen",
+  },
+  {
+    name: "Input Data",
+    href: "/divisi-sd/dashboard/sd/input",
+    icon: "Plus",
+  },
+];
+
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [menuItems, setMenuItems] = useState([]);
+
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    const userData = auth.getUser();
-    if (!userData) {
-      router.push("/login");
-      return;
-    }
+    let mounted = true;
 
-    const userMenuItems = auth.getMenuItems();
-    setUser(userData);
-    setMenuItems(userMenuItems);
+    const getUserSession = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!mounted) return;
+
+      if (!user) {
+        router.push("/divisi-sd/login");
+        return;
+      }
+
+      const metadata = user.user_metadata || {};
+
+      setUser({
+        email: user.email,
+        name: metadata.name || user.email,
+        role: metadata.role || "Operator",
+      });
+    };
+
+    getUserSession();
+    return () => {
+      mounted = false;
+    };
   }, [router]);
 
-  const handleLogout = () => {
-    auth.logout();
-    router.push("/login");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem("user"); 
+    router.push("/divisi-sd/login");
   };
 
-  if (!user) {
-    return null; // Atau tampilkan skeleton/loading state
-  }
+  if (!user) return null;
 
   return (
     <>
@@ -69,10 +107,8 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <div
-        className={`
-        fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-40 transform transition-transform duration-300 ease-in-out
-        ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
-      `}
+        className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-40 transform transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
@@ -81,9 +117,7 @@ export default function Sidebar() {
             <User size={16} />
             <div>
               <div className="font-medium">{user.name}</div>
-              <div className="text-xs text-gray-500">
-                {getRoleDisplayName(user.role)}
-              </div>
+              <div className="text-xs text-gray-500">{user.role}</div>
             </div>
           </div>
         </div>
@@ -96,19 +130,16 @@ export default function Sidebar() {
               const isActive = pathname === item.href;
 
               return (
-                // FIX: Menggunakan item.href sebagai key yang unik dan stabil
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`
-                      flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
                       ${
                         isActive
                           ? "bg-blue-50 text-blue-700 border border-blue-200"
                           : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                      }
-                    `}
-                    onClick={() => setIsOpen(false)} // Close mobile menu
+                      }`}
+                    onClick={() => setIsOpen(false)}
                   >
                     <IconComponent size={20} />
                     <span className="font-medium">{item.name}</span>
