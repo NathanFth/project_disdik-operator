@@ -8,9 +8,7 @@ import { ClipboardList } from "lucide-react";
 export default function PaudInputPage() {
   return (
     <>
-      <Sidebar />
       <div className="min-h-screen bg-background md:pl-0">
-        {/* <TopNavbar /> */}
         <InputPageBody
           title="Input Data PAUD"
           schoolType="PAUD" // <- penting: tetap PAUD

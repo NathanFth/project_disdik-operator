@@ -1,36 +1,25 @@
-// src/app/dashboard/layout.js
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Sidebar from "../components/Sidebar";
-import TopNavbar from "../components/TopNavbar";
-import { Loader2 } from "lucide-react";
-import { auth } from "../../lib/auth";
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import Sidebar from '../components/Sidebar';
+import TopNavbar from '../components/TopNavbar';
+import { Loader2 } from 'lucide-react';
 
-export default function DashboardLayout({ children }) {
-  const [ready, setReady] = useState(false);
-  const router = useRouter();
+function DashboardContent({ children }) {
+  const { loading, user } = useAuth();
 
-  useEffect(() => {
-    const user = auth.getUser();
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-    setReady(true);
-  }, [router]);
-
-  if (!ready) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-muted-foreground">Memuat dashboard...</p>
+          <p className="text-muted-foreground">Memuat data pengguna...</p>
         </div>
       </div>
     );
   }
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,9 +27,17 @@ export default function DashboardLayout({ children }) {
         <Sidebar />
         <div className="flex-1 md:pl-64">
           <TopNavbar />
-          <main className="p-6 space-y-8">{children}</main>
+          <main className="p-6 space-y-8 fade-in">{children}</main>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }) {
+  return (
+    <AuthProvider>
+      <DashboardContent>{children}</DashboardContent>
+    </AuthProvider>
   );
 }

@@ -1,39 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import SchoolsTable from "../../components/SchoolsTable";
-import { Baby, Loader2 } from "lucide-react";
-import { auth } from "../../../lib/auth";
+const { default: SchoolsTable } = require('@/app/components/SchoolsTable');
+const { Baby } = require('lucide-react');
 
-export default function PaudPage() {
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-
-  useEffect(() => {
-    const user = auth.getUser();
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    if (!auth.hasAccess("/dashboard/paud")) {
-      router.push("/dashboard");
-      return;
-    }
-    setLoading(false);
-  }, [router]);
-
-  if (loading) {
-    return (
-      <div className="min-h-[40vh] bg-background flex items-center justify-center rounded-xl border">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
+export default function SmpPage() {
   return (
     <>
       <div className="mb-8">
@@ -41,9 +11,7 @@ export default function PaudPage() {
           <Baby className="h-8 w-8 text-primary" />
           Data PAUD
         </h1>
-        <p className="text-muted-foreground">
-          Kelola data Pendidikan Anak Usia Dini (PAUD)
-        </p>
+        <p className="text-muted-foreground">Kelola data Pendidikan Anak Usia Dini (PAUD)</p>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-0 sm:p-6">
