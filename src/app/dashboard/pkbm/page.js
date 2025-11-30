@@ -1,39 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import SchoolsTable from "../../components/SchoolsTable";
-import { GraduationCap, Loader2 } from "lucide-react";
-import { auth } from "../../../lib/auth";
+import SchoolsTable from '@/app/components/SchoolsTable';
+import { GraduationCap } from 'lucide-react';
 
 export default function PkbmPage() {
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-
-  useEffect(() => {
-    const user = auth.getUser();
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    if (!auth.hasAccess("/dashboard/pkbm")) {
-      router.push("/dashboard");
-      return;
-    }
-    setLoading(false);
-  }, [router]);
-
-  if (loading) {
-    return (
-      <div className="min-h-[40vh] bg-background flex items-center justify-center rounded-xl border">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="mb-8">
