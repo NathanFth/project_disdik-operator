@@ -29,6 +29,16 @@ export const ROLE_CONFIG = {
       { name: 'Input Data', icon: 'Plus', path: '/smp/input' },
     ],
   },
+  DIVISI_PKBM: {
+    title: 'PKBM',
+    description: 'Sekolah PKBM',
+    basePath: '/dashboard',
+    menu: [
+      { name: 'Dashboard', icon: 'LayoutDashboard', path: '' },
+      { name: 'Data PKBM', icon: 'BookOpen', path: '/pkbm' },
+      { name: 'Input Data', icon: 'Plus', path: '/pkbm/input' },
+    ],
+  },
 
   DEFAULT: {
     title: 'Operator',

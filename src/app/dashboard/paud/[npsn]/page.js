@@ -1,16 +1,17 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 
-import Sidebar from "../../../components/Sidebar";
-import { Button } from "../../../components/ui/button";
-import SchoolDetailsTabs from "../../../components/SchoolDetailsTabs";
-import { BookOpen, ArrowLeft, Loader2, PencilLine } from "lucide-react";
+import Sidebar from '../../../components/Sidebar';
+import { Button } from '../../../components/ui/button';
+import SchoolDetailsTabs from '../../../components/SchoolDetailsTabs';
+import { BookOpen, ArrowLeft, Loader2, PencilLine } from 'lucide-react';
+import { supabase } from '@/lib/supabase/lib/client';
 
-const PAUD_DATA_URL = "/data/paud.json";
-const OPERATOR_TYPE = "PAUD";
+const PAUD_DATA_URL = '/data/paud.json';
+const OPERATOR_TYPE = 'PAUD';
 
 // Sama seperti di SchoolsTable.js
 const EMPTY_SISWA_DETAIL = {
@@ -50,10 +51,10 @@ function transformSinglePaudSchool(rawSchool, kecamatanName) {
     namaSekolah: school.name,
     npsn: school.npsn,
     kecamatan: school.kecamatan,
-    status: "SWASTA",
+    status: 'SWASTA',
     schoolType: OPERATOR_TYPE, // "PAUD" -> supaya isPaud = true
     jenjang: school.jenjang,
-    dataStatus: totalSiswa > 0 ? "Aktif" : "Data Belum Lengkap",
+    dataStatus: totalSiswa > 0 ? 'Aktif' : 'Data Belum Lengkap',
 
     st_male: parseInt(school.st_male, 10) || 0,
     st_female: parseInt(school.st_female, 10) || 0,
@@ -96,7 +97,7 @@ export default function PaudDetailPage() {
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   useEffect(() => {
     let ignore = false;
@@ -104,46 +105,45 @@ export default function PaudDetailPage() {
     async function load() {
       try {
         setLoading(true);
-        setError("");
+        setError('');
 
         if (!npsnParam) {
-          throw new Error("NPSN tidak valid");
+          throw new Error('NPSN tidak valid');
         }
 
         const res = await fetch(PAUD_DATA_URL);
         if (!res.ok) {
-          throw new Error("Gagal memuat data PAUD");
+          throw new Error('Gagal memuat data PAUD');
         }
 
         const rawData = await res.json();
 
-        // JSON: { "Banjarwangi": [ {...}, {...} ], ... }
         const transformedSchools = Object.entries(rawData).flatMap(
           ([kecamatanName, schoolsInKecamatan]) =>
-            schoolsInKecamatan.map((school) =>
-              transformSinglePaudSchool(school, kecamatanName)
-            )
+            schoolsInKecamatan.map((school) => transformSinglePaudSchool(school, kecamatanName))
         );
 
-        // Untuk operator PAUD: semua selain jenjang TK
-        const filteredSchools = transformedSchools.filter(
-          (school) => school.jenjang !== "TK"
-        );
+        const filteredSchools = transformedSchools.filter((school) => school.jenjang !== 'TK');
 
-        const found = filteredSchools.find(
-          (school) => String(school.npsn) === String(npsnParam)
-        );
+        const found = filteredSchools.find((school) => String(school.npsn) === String(npsnParam));
+
+        console.log('fonud dari json : ', found);
 
         if (!found) {
-          throw new Error("Satuan PAUD dengan NPSN tersebut tidak ditemukan");
+          throw new Error('Satuan PAUD dengan NPSN tersebut tidak ditemukan');
         }
+        // const { data, error } = await supabase.rpc('get_school_detail_by_npsn', {
+        //   input_npsn: npsnParam,
+        // });
+
+        // console.log('dari supbase : ', data);
 
         if (!ignore) {
           setDetail(found);
         }
       } catch (e) {
         if (!ignore) {
-          setError(e.message || "Terjadi kesalahan saat memuat data");
+          setError(e.message || 'Terjadi kesalahan saat memuat data');
           setDetail(null);
         }
       } finally {
@@ -170,9 +170,7 @@ export default function PaudDetailPage() {
                 <BookOpen className="h-4 w-4" />
                 <span>Detail PAUD</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
-                Detail PAUD
-              </h1>
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Detail PAUD</h1>
               {npsnParam && (
                 <p className="text-sm text-muted-foreground">
                   NPSN: <span className="font-mono">{npsnParam}</span>
@@ -220,9 +218,7 @@ export default function PaudDetailPage() {
             </div>
           )}
 
-          {!loading && !error && detail && (
-            <SchoolDetailsTabs school={detail} />
-          )}
+          {!loading && !error && detail && <SchoolDetailsTabs school={detail} />}
         </main>
       </div>
     </>

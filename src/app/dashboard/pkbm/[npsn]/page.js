@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 
-import Sidebar from "../../../components/Sidebar";
-import { Button } from "../../../components/ui/button";
-import SchoolDetailsTabs from "../../../components/SchoolDetailsTabs";
-import { BookOpen, ArrowLeft, Loader2, PencilLine } from "lucide-react";
+import Sidebar from '../../../components/Sidebar';
+import { Button } from '../../../components/ui/button';
+import SchoolDetailsTabs from '../../../components/SchoolDetailsTabs';
+import { BookOpen, ArrowLeft, Loader2, PencilLine } from 'lucide-react';
 
-const PKBM_DATA_URL = "/data/pkbm.json";
-const OPERATOR_TYPE = "PKBM";
+const PKBM_DATA_URL = '/data/pkbm.json';
+const OPERATOR_TYPE = 'PKBM';
 
 const EMPTY_SISWA_DETAIL = {
   kelas1: { l: 0, p: 0 },
@@ -52,10 +52,10 @@ function transformSinglePkbmSchool(rawSchool, kecamatanName) {
     namaSekolah: school.name,
     npsn: school.npsn,
     kecamatan: school.kecamatan,
-    status: school.type || "SWASTA",
+    status: school.type || 'SWASTA',
     schoolType: OPERATOR_TYPE, // "PKBM"
-    jenjang: "PKBM",
-    dataStatus: totalSiswa > 0 ? "Aktif" : "Data Belum Lengkap",
+    jenjang: 'PKBM',
+    dataStatus: totalSiswa > 0 ? 'Aktif' : 'Data Belum Lengkap',
 
     address: school.address,
     village: school.village,
@@ -89,30 +89,30 @@ function transformSinglePkbmSchool(rawSchool, kecamatanName) {
         rusakBerat: school.toilets?.heavy_damage ?? 0,
       },
       ruangKelasSementara: {
-        tersedia: school.rgks?.available ?? "",
-        jumlah: school.rgks?.n_available ?? "",
+        tersedia: school.rgks?.available ?? '',
+        jumlah: school.rgks?.n_available ?? '',
         baik: school.rgks?.good ?? 0,
         rusakSedang: school.rgks?.moderate_damage ?? 0,
         rusakBerat: school.rgks?.heavy_damage ?? 0,
       },
       playground: {
-        tersedia: school.playground_area?.available ?? "",
-        jumlah: school.playground_area?.n_available ?? "",
+        tersedia: school.playground_area?.available ?? '',
+        jumlah: school.playground_area?.n_available ?? '',
       },
       uks: {
-        tersedia: school.uks?.available ?? "",
-        jumlah: school.uks?.n_available ?? "",
+        tersedia: school.uks?.available ?? '',
+        jumlah: school.uks?.n_available ?? '',
       },
       ape: {
         luar: {
-          tersedia: school.ape?.luar?.available ?? "",
-          jumlah: school.ape?.luar?.n_available ?? "",
-          kondisi: school.ape?.luar?.condition ?? "",
+          tersedia: school.ape?.luar?.available ?? '',
+          jumlah: school.ape?.luar?.n_available ?? '',
+          kondisi: school.ape?.luar?.condition ?? '',
         },
         dalam: {
-          tersedia: school.ape?.dalam?.available ?? "",
-          jumlah: school.ape?.dalam?.n_available ?? "",
-          kondisi: school.ape?.dalam?.condition ?? "",
+          tersedia: school.ape?.dalam?.available ?? '',
+          jumlah: school.ape?.dalam?.n_available ?? '',
+          kondisi: school.ape?.dalam?.condition ?? '',
         },
       },
       furnitureKomputer: {
@@ -132,8 +132,8 @@ function transformSinglePkbmSchool(rawSchool, kecamatanName) {
     },
 
     kelembagaan: {
-      kepalaSekolah: school.kepsek?.name || "",
-      statusKepsek: school.kepsek?.status || "",
+      kepalaSekolah: school.kepsek?.name || '',
+      statusKepsek: school.kepsek?.status || '',
     },
   };
 }
@@ -145,7 +145,7 @@ export default function PkbmDetailPage() {
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   useEffect(() => {
     let ignore = false;
@@ -153,24 +153,22 @@ export default function PkbmDetailPage() {
     async function load() {
       try {
         setLoading(true);
-        setError("");
+        setError('');
 
         if (!npsnParam) {
-          throw new Error("NPSN tidak valid");
+          throw new Error('NPSN tidak valid');
         }
 
         const res = await fetch(PKBM_DATA_URL);
         if (!res.ok) {
-          throw new Error("Gagal memuat data PKBM");
+          throw new Error('Gagal memuat data PKBM');
         }
 
         const rawData = await res.json();
 
         const transformedSchools = Object.entries(rawData).flatMap(
           ([kecamatanName, schoolsInKecamatan]) =>
-            schoolsInKecamatan.map((school) =>
-              transformSinglePkbmSchool(school, kecamatanName)
-            )
+            schoolsInKecamatan.map((school) => transformSinglePkbmSchool(school, kecamatanName))
         );
 
         const found = transformedSchools.find(
@@ -178,15 +176,15 @@ export default function PkbmDetailPage() {
         );
 
         if (!found) {
-          throw new Error("PKBM dengan NPSN tersebut tidak ditemukan");
+          throw new Error('PKBM dengan NPSN tersebut tidak ditemukan');
         }
-
+        console.log('data dari detail page pkbm : ', found);
         if (!ignore) {
           setDetail(found);
         }
       } catch (e) {
         if (!ignore) {
-          setError(e.message || "Terjadi kesalahan saat memuat data");
+          setError(e.message || 'Terjadi kesalahan saat memuat data');
           setDetail(null);
         }
       } finally {
@@ -213,9 +211,7 @@ export default function PkbmDetailPage() {
                 <BookOpen className="h-4 w-4" />
                 <span>Detail PKBM</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
-                Detail PKBM
-              </h1>
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Detail PKBM</h1>
               {npsnParam && (
                 <p className="text-sm text-muted-foreground">
                   NPSN: <span className="font-mono">{npsnParam}</span>
@@ -263,9 +259,7 @@ export default function PkbmDetailPage() {
             </div>
           )}
 
-          {!loading && !error && detail && (
-            <SchoolDetailsTabs school={detail} />
-          )}
+          {!loading && !error && detail && <SchoolDetailsTabs school={detail} />}
         </main>
       </div>
     </>

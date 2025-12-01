@@ -320,7 +320,8 @@ export default function SchoolsTable({ operatorType }) {
 
         setSchoolsData(data);
 
-        console.log('finalFilteredSchools : ', finalFilteredSchools[0]);
+        console.log('finalFilteredSchoolsJSON : ', finalFilteredSchools[0]);
+        console.log('schoolsDataSupabasse: ', data);
         const uniqueKecamatan = [...new Set(finalFilteredSchools.map((s) => s.kecamatan))].sort();
         setKecamatanList(uniqueKecamatan);
       } catch (error) {

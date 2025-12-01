@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import Sidebar from "../../../components/Sidebar";
+import Sidebar from '../../../components/Sidebar';
 // import TopNavbar from "../../../components/TopNavbar";
-import InputPageBody from "../../../components/InputPageBody";
-import { ClipboardList } from "lucide-react";
+import InputPageBody from '../../../components/InputPageBody';
+import { ClipboardList } from 'lucide-react';
 
 export default function PkbmInputPage() {
   return (

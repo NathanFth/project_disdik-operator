@@ -1,16 +1,17 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 
-import Sidebar from "../../../components/Sidebar";
-import { Button } from "../../../components/ui/button";
-import SchoolDetailsTabs from "../../../components/SchoolDetailsTabs";
-import { BookOpen, ArrowLeft, Loader2, PencilLine } from "lucide-react";
+import Sidebar from '../../../components/Sidebar';
+import { Button } from '../../../components/ui/button';
+import SchoolDetailsTabs from '../../../components/SchoolDetailsTabs';
+import { BookOpen, ArrowLeft, Loader2, PencilLine } from 'lucide-react';
+import { supabase } from '@/lib/supabase/lib/client';
 
-const SMP_DATA_URL = "/data/smp.json";
-const OPERATOR_TYPE = "SMP";
+const SMP_DATA_URL = '/data/smp.json';
+const OPERATOR_TYPE = 'SMP';
 
 const EMPTY_SISWA_DETAIL = {
   kelas1: { l: 0, p: 0 },
@@ -59,10 +60,10 @@ function transformSingleSmpSchool(rawSchool, kecamatanName) {
     namaSekolah: school.name,
     npsn: school.npsn,
     kecamatan: school.kecamatan,
-    status: school.type || "NEGERI",
+    status: school.type || 'NEGERI',
     schoolType: OPERATOR_TYPE, // "SMP"
-    jenjang: "SMP",
-    dataStatus: totalSiswa > 0 ? "Aktif" : "Data Belum Lengkap",
+    jenjang: 'SMP',
+    dataStatus: totalSiswa > 0 ? 'Aktif' : 'Data Belum Lengkap',
 
     address: school.address,
     village: school.village,
@@ -108,8 +109,8 @@ function transformSingleSmpSchool(rawSchool, kecamatanName) {
 
     // ====== KELEMBAGAAN (kalau datanya ada di JSON lain nanti tinggal diisi) ======
     kelembagaan: {
-      kepalaSekolah: school.kepsek?.name || "",
-      statusKepsek: school.kepsek?.status || "",
+      kepalaSekolah: school.kepsek?.name || '',
+      statusKepsek: school.kepsek?.status || '',
     },
   };
 }
@@ -121,53 +122,44 @@ export default function SmpDetailPage() {
 
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
-  const [error, setError] = useState("");
-
+  const [error, setError] = useState('');
   useEffect(() => {
     let ignore = false;
 
     async function load() {
       try {
         setLoading(true);
-        setError("");
+        setError('');
 
         if (!npsnParam) {
-          throw new Error("NPSN tidak valid");
+          throw new Error('NPSN tidak valid');
+        }
+        const { data, error } = await supabase.rpc('get_school_detail_by_npsn', {
+          input_npsn: npsnParam,
+        });
+
+        if (error) {
+          throw new Error(error.message || 'Gagal memuat data dari database');
         }
 
-        const res = await fetch(SMP_DATA_URL);
-        if (!res.ok) {
-          throw new Error("Gagal memuat data SMP");
-        }
-
-        const rawData = await res.json();
-
-        // rawData bentuknya: { "KecamatanName": [ {...}, ... ], ... }
-        const transformedSchools = Object.entries(rawData).flatMap(
-          ([kecamatanName, schoolsInKecamatan]) =>
-            (schoolsInKecamatan || []).map((school) =>
-              transformSingleSmpSchool(school, kecamatanName)
-            )
-        );
-
-        const found = transformedSchools.find(
-          (school) => String(school.npsn) === String(npsnParam)
-        );
-
-        if (!found) {
-          throw new Error("SMP dengan NPSN tersebut tidak ditemukan");
+        if (!data) {
+          throw new Error('Sekolah dengan NPSN tersebut tidak ditemukan');
         }
 
         if (!ignore) {
-          setDetail(found);
+          console.log('Detail sekolah (Supabase):', data);
+          setDetail(data);
         }
       } catch (e) {
         if (!ignore) {
-          setError(e.message || "Terjadi kesalahan saat memuat data");
+          console.error(e);
+          setError(e.message || 'Terjadi kesalahan saat memuat data');
           setDetail(null);
         }
       } finally {
-        if (!ignore) setLoading(false);
+        if (!ignore) {
+          setLoading(false);
+        }
       }
     }
 
@@ -190,9 +182,7 @@ export default function SmpDetailPage() {
                 <BookOpen className="h-4 w-4" />
                 <span>Detail SMP</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
-                Detail SMP
-              </h1>
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Detail SMP</h1>
               {npsnParam && (
                 <p className="text-sm text-muted-foreground">
                   NPSN: <span className="font-mono">{npsnParam}</span>
@@ -240,9 +230,7 @@ export default function SmpDetailPage() {
             </div>
           )}
 
-          {!loading && !error && detail && (
-            <SchoolDetailsTabs school={detail} />
-          )}
+          {!loading && !error && detail && <SchoolDetailsTabs school={detail} />}
         </main>
       </div>
     </>

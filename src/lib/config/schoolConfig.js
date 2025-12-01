@@ -1,5 +1,6 @@
 export const schoolConfigs = {
   SD: {
+    schoolTypeId: 3,
     grades: [1, 2, 3, 4, 5, 6],
     lanjutDalamKabOptions: [
       { key: 'smp', label: 'SMP' },
@@ -15,6 +16,7 @@ export const schoolConfigs = {
     ],
   },
   SMP: {
+    schoolTypeId: 4,
     grades: [7, 8, 9],
     lanjutDalamKabOptions: [
       { key: 'sma', label: 'SMA' },
@@ -32,6 +34,7 @@ export const schoolConfigs = {
     ],
   },
   'TK/PAUD': {
+    schoolTypeId: 1,
     isPaud: true,
     rombelTypes: [
       { key: 'tka', label: 'TK A' },
@@ -49,6 +52,7 @@ export const schoolConfigs = {
     ],
   },
   'PKBM Terpadu': {
+    schoolTypeId: 2,
     isPkbm: true,
     pakets: {
       A: { name: 'Paket A (Setara SD)', grades: [1, 2, 3, 4, 5, 6] },
